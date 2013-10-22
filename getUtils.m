@@ -24,6 +24,7 @@ function string = hexavigesimal_cast(number)
     number = number - 1;
     if number < 0
         warning('number must be greater than 0.');
+        string = '';
         return;
     else
         quotient = floor(number/26);
@@ -47,12 +48,11 @@ end
 
 % Conversion from hexavigesimal (base 26) to double
 function number = hexavigesimal_reverse(string)
-    number = numerical_cast(string(1)) * 26;
-    for i=2:length(string)-1
-        number = number * 26;
-        number = number + (numerical_cast(string(i)) * 26);
+    number = 0;
+    for i=1:length(string)-1
+        number = (number + numerical_cast(string(i)) + 1) * 26;
     end
-    number = number + numerical_cast(string(end));
+    number = number + numerical_cast(string(end)) + 1;
 end
 
 % Convert numbers 0-25 to chars
