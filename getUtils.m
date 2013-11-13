@@ -3,19 +3,26 @@
 % 'getUtils' is a utility module of general purpose function collections. That is, it is a series of 
 % organized 'submodules' of specific categories.
 % 
-% USAGE: call the module by 'utils = getUtils;'. Then functions/submodules may be called directly.
+% USAGE: call the module by 'utils = getUtils;'. Then functions/submodules may be called directly as 'utils.collection.function()'.
 % 
 % ----------------------------------------------------------------------------------------
 % 
 % Matlab doesn't allow multiple functions to be accessed from a single
 % *.m file.  A way around that is to return the functions as fields of a 
-% 'struct'; this makes 'getUtils' function somewhat like a Python module.
+% struct; this makes 'getUtils' function somewhat like a Python module.
 function utils = getUtils
+    % submodules
     utils.units = getUnits;
     utils.operators = getOperators;
     utils.math = getMath;
     utils.os = getOS;
-    % global as = operator
+    utils.xl = getXL;
+    utils.std = getOperators;
+    utils.time = getTime;
+
+    % methods
+    utils.globalize = @globalize;
+    % global as = operator TODO
 end
 
 % import all functions into the global workspace
@@ -23,11 +30,17 @@ end
 function import
 end
 
+% import a specific function from 'Utils' into the global workspace
+function globalize(fun)
+    nameparts = split(fun,'.');
+    eval(['assignin(''base'',''' nameparts{end} ''', @' fun ')']);
+end
+
 % ---------------------------------------- OPERATORS ----------------------------------------
 
 % return the operators submodule
 function operators = getOperators
-    operators.vivify = @vivify;
+    % operators.vivify = @vivify; TODO
     operators.map = @map;
     operators.ternary = @ternary;
     operators.slice = @slice;
@@ -35,6 +48,34 @@ function operators = getOperators
     operators.strsplit = @strsplit;
     operators.arraysplit = @arraysplit;
     operators.index = @index;
+    operators.strip = @strip;
+    % operators.hashmap = @hashmap; TODO
+    operators.downsample = @downsample;
+    operators.filter = @filter;
+    operators.reverse = @reverse;
+    operators.bkwd = @bkwd;
+end
+
+% reverse an array
+% TODO reverse array in place
+function iter = reverse(array)
+    for i=abs(-length(array):-1)
+        iter(length(array)-i+1)=array(i);
+    end
+end
+
+% create an iterable sequence going backwards, faster than 'reverse'
+function iter = bkwd(start,stop)
+    iter = abs(-start:-stop);
+end
+
+% strip all instances of param 'substr' from str
+function ret = strip(str,substr)
+    chunks = split(str,substr);
+    ret = '';
+    for i=1:length(chunks)
+        ret = [ ret char(chunks(i)) ];
+    end
 end
 
 % position(s) of 'delimiter' in array
@@ -52,6 +93,7 @@ end
 % split string at delimiter
 function matches = strsplit(str,delimiter)
     matches = textscan(str,'%s','delimiter',{delimiter,'*'});
+    matches = matches{1,:};
 end
 
 % split array at delimiter
@@ -63,15 +105,23 @@ function matches = arraysplit(array,delimiter)
 end
 
 % return param 'array' as slices designated by param 'step'
-% TODO accept array input for param 'step', to slice at multiple locations
+% alternative syntax: slice also accept array input for param 'step', to slice at multiple locations
+% designated by the elements of 'step'
 function ret = slice(array,step)
-    for i=0:floor(length(array)/step)-1
-        ret(i+1,:) = array((i*step)+1:(i+1)*step);
+    if numel(step)>1
+        for i=1:length(step)-1
+            ret{i,:} = array(step(i):step(i+1)-1);
+        end
+    else
+        for i=0:floor(length(array)/step)-1
+            ret(i+1,:) = array((i*step)+1:(i+1)*step);
+        end
     end
 end
 
-% implementation of an autovivification function (i.e. compare to autovivification in Perl)
-function vivify
+% downsample an array by param 'step'
+function ret = downsample(array,step)
+    ret = mean(slice(array,step),2);
 end
 
 % implementation of an array mapping function (i.e. compare to Python Standard Lib 'map')
@@ -80,6 +130,17 @@ function ret = map(callback,array)
     ret = cell(0,numel(array));
     for i=1:numel(array)
         ret{i} = callback(array(i));
+    end
+end
+
+% return a sequence consisting of those items from the esequence for which 
+% param 'callback(array(i))' evalutes as true.
+function ret = filter(callback,array)
+    ret = [];
+    for i=1:numel(array)
+        if callback(array(i))
+            ret(end+1) = array(i);
+        end
     end
 end
 
@@ -92,6 +153,15 @@ function ret = ternary(cond,a,b)
         catch e
         end
     ret = b(); end
+end
+
+% implementation of an autovivification function (i.e. compare to autovivification in Perl)
+function vivify
+end
+
+% map every element of param 'array' to it's keyed element in param 'hash'
+% return the resulting array 
+function hashmap(array,hash)
 end
 
 % ---------------------------------------- OS ----------------------------------------
@@ -132,16 +202,35 @@ function math = getMath
 end
 
 % perform piecewise function on array
+% Usage of this function currently looks like the following example:
+% 
+%   data = utils.math.piecewise(array,{'x>300 && x<500','x>30 && x<50','x>15 && x<25','x>5 && x<15'},{1,10,20,40,0});
+% 
+% NOTE use of this function can be relatively slow for large arrays
+% TODO accepts callbacks as cell of expressions, and evalute
 function ret = piecewise(array,cases,callbacks)
+    % compare the arguments
     nargCmp(nargin,3,'missing input arguments');
-    if numel(cases) ~= numel(callbacks) 
+    if numel(cases) ~= numel(callbacks)-1
         error('cases array and callback functions array must be of the same size');
     end
+
+    % predeclare the boolean expressions in param 'cases'
+    bools = cell(length(cases));
+    for i=1:length(cases)
+        bools{i} = bool(cases{i});
+    end
+
+    % loop through 'array' and evalute 'cases'
+    ret = zeros(length(array),1);
     for i=1:length(array)
         for j=1:length(cases)
-            if cases{j}(array(i))
-                ret(i,1) = callbacks{j}(array(i));
+            if bools{j}(array(i))
+                ret(i,1) = callbacks{j};
+                break;
             end
+            % 'else'
+            ret(i,1) = callbacks{end};
         end
     end
 end
@@ -154,9 +243,9 @@ function handle = bool(statement)
     args = cell2mat(argnames(inline(statement)));
     
     % create a function and return a handle to it
-    function hndl(varargin)
+    function out = hndl(varargin)
         assignin('base',args,varargin{:});
-        evalin('base',statement);
+        out = evalin('base',statement);
     end
     handle = @hndl;
 end
@@ -169,6 +258,9 @@ function units = getUnits
     units.hexavigesimal = @hexavigesimal;
     units.alphabetical_cast = @alphabetical_cast;
     units.numerical_cast = @numerical_cast;
+    units.binary = getBinary;
+    units.sequence = @sequence;
+    units.numdigits = @numdigits;
 end
 
 % Conversion to hexavigesimal (base 26)
@@ -228,6 +320,84 @@ end
 function number = numerical_cast(c)
     number = str2num(sprintf('%i',c)) - 97;
 end
+
+% converts param 'num' into a sequence of digits
+function seq = sequence(num)
+    for i=1:numdigits(num)
+        seq(i) = round(mod(num,10^i)*(10*10^-i));
+    end
+end
+
+% returns the number of digits in a number
+function num = numdigits(num)
+    if num<9, num = 1;
+    else num=floor(log10(num)+1); end
+end
+
+% ---------------------------------------- BINARY ----------------------------------------
+
+function bin = getBinary
+    bin.and = @and;
+    bin.or = @or;
+    bin.xor = @xor;
+end
+
+% bitwise AND
+function bin = and(a,b)
+
+end
+
+% bitwise OR
+function bin = or(a,b)
+end
+
+% bitwise XOR
+function bin = xor(a,b)
+end
+
+% ---------------------------------------- XL ----------------------------------------
+
+function xl = getXL
+    xl.size = @size;
+    xl.getRow = @getRow;
+end
+
+% return the size of a worksheet
+function [numcols,numrows] = size(sheet)
+    numcols = sheet.Range('A1').End('xlToRight').Column;
+    numrows = sheet.Range('A1').End('xlDown').Row;
+end
+
+function cells = getRow(sheet,index)
+    [numcols,~] = size(sheet);
+    cells = sheet.Range(strcat('A',num2str(index),':',upper(hexavigesimal(numcols)),num2str(index)));
+end
+
+% ---------------------------------------- TIME ----------------------------------------
+
+function time = getTime
+    time.datetime = @datetime;
+end
+
+% function this = datetime
+%     % vars
+%     this.day = 1;
+%     this.year = 2;
+%     % this.minute
+%     % this.second
+%     % this.millis
+%     % this.micro
+%     % this.date
+%     % this.time
+
+%     % methods
+%     this. = @;
+
+%     function 
+%         disp('here');
+%     end
+    
+% end
 
 % ---------------------------------------- DEBUG ----------------------------------------
 
