@@ -3,6 +3,8 @@ matlab-utils
 
 The purpose of this module is to incorporate into matlab some basic functionality that matlab is mysteriously lacking.
 
+#intro:
+
 The module can be imported by typing something like:
   
   <i><b>utils = getUtils;</b></i>
@@ -19,5 +21,44 @@ which would import the function 'utils.std.reverse' into the global workspace. T
 
   <i><b>newarray = reverse(array);</b></i>
   
-  
-  
+#contents:
+
+utils
+  - units
+    - base26()
+    - hexavigesimal()
+    - alphabetical_cast()
+    - numerical_cast()
+    - binary
+      - xor
+      - or
+      - and
+    - sequence()
+    - numdigits()
+  - operators
+    - map()
+    - ternary()
+    - slice()
+    - split()
+    - split()
+    - strsplit()
+    - arraysplit()
+    - index()
+    - strip()
+    - downsample()
+    - filter()
+    - reverse()
+    - bkwd()
+  - math
+    - piecewise()
+    - bool()
+  - os
+    - path()
+  - xl
+    - size()
+    - getRow()
+  - std
+    - (proxy for 'utils.operators')
+  - time
+    - datetime()
+  - globalize()
