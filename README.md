@@ -1,7 +1,7 @@
 matlab-utils
 ============
 
-The purpose of this module is to incorporate into matlab some basic functionality that the language is mysteriously lacking.
+The purpose of this module is to incorporate into Matlab some basic functionality that the language is mysteriously lacking.  This module takes a Functional Programming aproach to simplifying everyday Matlab code with general-purpose utility functions that abstract away much of the convolution of Matlab code into (hopefully!) more intuitive functions. 
 
 #intro:
 
