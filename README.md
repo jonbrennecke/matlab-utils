@@ -1,7 +1,7 @@
 matlab-utils
 ============
 
-The purpose of this module is to incorporate some functionality into matlab.
+The purpose of this module is to incorporate into matlab some basic functionality that matlab is mysteriously lacking.
 
 The module can be imported by typing something like:
   
