@@ -53,7 +53,8 @@ utils
     - piecewise()
     - bool()
   - os
-    - path()
+    - path
+      - like()
   - xl
     - size()
     - getRow()
