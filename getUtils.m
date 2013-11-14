@@ -33,7 +33,7 @@ end
 % import a specific function from 'Utils' into the global workspace
 function globalize(fun)
     nameparts = split(fun,'.');
-    eval(['assignin(''base'',''' nameparts{end} ''', @' fun ')']);
+    eval(['assignin(''base'',''' nameparts{end} ''', ' fun ')']);
 end
 
 % ---------------------------------------- OPERATORS ----------------------------------------
@@ -195,7 +195,7 @@ end
 
 % ---------------------------------------- MATH ----------------------------------------
 
-% return mathematics submodule
+% return mathematics submodule containing lesser used utilities and operators
 function math = getMath
     math.piecewise = @piecewise;
     math.bool = @bool;
@@ -248,6 +248,10 @@ function handle = bool(statement)
         out = evalin('base',statement);
     end
     handle = @hndl;
+end
+
+% return a uniform neighborhood around each point passed in param 'points'
+function out = neighborhood(array,points,width)
 end
 
 % ---------------------------------------- UNITS ----------------------------------------
@@ -344,7 +348,6 @@ end
 
 % bitwise AND
 function bin = and(a,b)
-
 end
 
 % bitwise OR
@@ -358,8 +361,32 @@ end
 % ---------------------------------------- XL ----------------------------------------
 
 function xl = getXL
+    xl.new = @newXL;
     xl.size = @size;
     xl.getRow = @getRow;
+    xl.addSheet = @addSheet;
+    xl.addSheets = @addSheets;
+end
+
+function [Excel,Workbooks,Sheets] = newXL
+    Excel = actxserver('Excel.Application');
+    set(Excel, 'Visible', 1);
+    Workbooks = Excel.Workbooks;
+    workbook.triggered = invoke(Workbooks, 'Add');
+    Sheets = Excel.ActiveWorkBook.sheets;
+    invoke(workbook.triggered,'Activate');
+end
+
+function sheet = addSheet(Sheets,sheetname)
+    sheet = invoke(Sheets,'Add');
+    invoke(sheet, 'Activate');
+    sheet.name = sheetname;
+end
+
+function addSheets(sheetnames)
+    % for i=1:length(sheetnames)
+    %     addSheet
+    % end
 end
 
 % return the size of a worksheet
@@ -368,6 +395,7 @@ function [numcols,numrows] = size(sheet)
     numrows = sheet.Range('A1').End('xlDown').Row;
 end
 
+% return the row at param 'index'
 function cells = getRow(sheet,index)
     [numcols,~] = size(sheet);
     cells = sheet.Range(strcat('A',num2str(index),':',upper(hexavigesimal(numcols)),num2str(index)));
