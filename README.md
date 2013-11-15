@@ -21,6 +21,14 @@ which would import the function 'utils.std.reverse' into the global workspace. T
 
   <i><b>newarray = reverse(array);</b></i>
   
+Similar to the above method, submodules can also be imported individually. For example:
+
+  <i><b>utils.globalize('utils.std');</b></i>
+  
+Which results in the 'std' submodue being imported into the base workspace. Its functions may then be accessed as:
+
+  <i><b>newarray = std.reverse(array);</b></i>
+  
 #contents:
 
 utils
