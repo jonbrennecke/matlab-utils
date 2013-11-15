@@ -64,8 +64,12 @@ utils
     - path
       - like()
   - xl
+    - new()
     - size()
     - getRow()
+    - set
+    - addSheet()
+    - addSheets()
   - std
     - (proxy for 'utils.operators')
   - time
