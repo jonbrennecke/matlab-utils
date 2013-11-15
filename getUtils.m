@@ -1,5 +1,8 @@
 % ---------------------------------------- HEADER ----------------------------------------
 % 
+% for a complete description, see http://github.com/jonbrennecke/matlab-utils
+% 
+% 
 % 'getUtils' is a utility module of general purpose function collections. That is, it is a series of 
 % organized 'submodules' of specific categories.
 % 
@@ -33,7 +36,8 @@ end
 % import a specific function from 'Utils' into the global workspace
 function globalize(fun)
     nameparts = split(fun,'.');
-    eval(['assignin(''base'',''' nameparts{end} ''', ' fun ')']);
+%     eval(['assignin(''base'',''' nameparts{end} ''', ' fun ')']);
+    evalin('base',['assignin(''base'',''' nameparts{end} ''', ' fun ')']);
 end
 
 % ---------------------------------------- OPERATORS ----------------------------------------
