@@ -17,7 +17,7 @@ function utils = getUtils
     % submodules
     utils.units = getUnits;
     utils.operators = getOperators;
-    utils.math = getMath;
+    utils.exp = getExp;
     utils.os = getOS;
     utils.xl = getXL;
     utils.std = getOperators;
@@ -197,26 +197,27 @@ function result = like(query,where)
     result = files(logic);
 end
 
-% ---------------------------------------- MATH ----------------------------------------
+% ---------------------------------------- EXP ----------------------------------------
 
-% return mathematics submodule containing lesser used utilities and operators
-function math = getMath
-    math.piecewise = @piecewise;
-    math.bool = @bool;
+% return 'experimental' submodule containing lesser used utilities and operators
+function exp = getExp
+    exp.piecewise = @piecewise;
+    exp.bool = @bool;
+    exp.logical_eval = @logical_eval;
 end
 
 % perform piecewise function on array
 % Usage of this function currently looks like the following example:
 % 
-%   data = utils.math.piecewise(array,{'x>300 && x<500','x>30 && x<50','x>15 && x<25','x>5 && x<15'},{1,10,20,40,0});
+%   data = utils.exp.piecewise(array,{'x>300 && x<500','x>30 && x<50','x>15 && x<25','x>5 && x<15'},{1,10,20,40,0});
 % 
-% NOTE use of this function can be relatively slow for large arrays
+% NOTE use of this function can be very slow for large arrays
 % TODO accepts callbacks as cell of expressions, and evalute
 function ret = piecewise(array,cases,callbacks)
     % compare the arguments
     nargCmp(nargin,3,'missing input arguments');
     if numel(cases) ~= numel(callbacks)-1
-        error('cases array and callback functions array must be of the same size');
+        error('callback functions array must have one element more than cases array.');
     end
 
     % predeclare the boolean expressions in param 'cases'
@@ -236,6 +237,26 @@ function ret = piecewise(array,cases,callbacks)
             % 'else'
             ret(i,1) = callbacks{end};
         end
+    end
+end
+
+% Performs a logical indexing of an array with multiple cases.
+% The elements in the array given by the indices returned from each logical indexing
+% given in param 'cases' are assigned the values passed in param 'callbacks'
+% TODO add support for anonymous functions or bool expressions to be evaluated for callbacks parameter.
+function newarray = logical_eval(array,cases,callbacks)
+    % compare the arguments
+    nargCmp(nargin,3,'missing input arguments');
+    if numel(cases) ~= numel(callbacks)
+        error('cases array and callback functions array must be of the same size');
+    end
+    
+    newarray = array; % duplicate 'array' as the modified array to be returned
+
+    % use logical indexing to modify 'array'
+    for i=1:length(cases)
+        args = cell2mat(argnames(inline(cases{i})));
+        eval(['newarray(' strrep(cases{i},args,'array') ') = callbacks{i};']);
     end
 end
 
@@ -345,21 +366,21 @@ end
 % ---------------------------------------- BINARY ----------------------------------------
 
 function bin = getBinary
-    bin.and = @and;
-    bin.or = @or;
-    bin.xor = @xor;
+    bin.and = @bin_and;
+    bin.or = @bin_or;
+    bin.xor = @bin_xor;
 end
 
 % bitwise AND
-function bin = and(a,b)
+function bin = bin_and(a,b)
 end
 
 % bitwise OR
-function bin = or(a,b)
+function bin = bin_or(a,b)
 end
 
 % bitwise XOR
-function bin = xor(a,b)
+function bin = bin_xor(a,b)
 end
 
 % ---------------------------------------- XL ----------------------------------------
@@ -412,7 +433,7 @@ function cells = getRow(sheet,index)
     cells = sheet.Range(strcat('A',num2str(index),':',upper(hexavigesimal(numcols)),num2str(index)));
 end
 
-% set the row at param 'position'
+% set the cell range starting at the point passed in param 'position'
 function setCells(sheet,position,data)
     range = sheet.Range([ upper(hexavigesimal(position(1))) num2str(position(2)) ':'  upper(hexavigesimal(position(1) + size(data,2) - 1)) num2str(position(2) + size(data,1) -1) ]);
     set(range, 'Value', data);
