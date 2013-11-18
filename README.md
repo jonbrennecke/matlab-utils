@@ -57,8 +57,9 @@ utils
     - filter()
     - reverse()
     - bkwd()
-  - math
+  - exp
     - piecewise()
+    - logical_eval()
     - bool()
   - os
     - path
@@ -67,7 +68,7 @@ utils
     - new()
     - size()
     - getRow()
-    - set
+    - set()
     - addSheet()
     - addSheets()
   - std
