@@ -62,6 +62,7 @@ utils
     - logical_eval()
     - bool()
   - os
+    - open()
     - path
       - like()
   - xl
