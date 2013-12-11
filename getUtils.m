@@ -2,7 +2,6 @@
 % 
 % for a complete description, see http://github.com/jonbrennecke/matlab-utils
 % 
-% 
 % 'getUtils' is a utility module of general purpose function collections. That is, it is a series of 
 % organized 'submodules' of specific categories.
 % 
@@ -16,12 +15,14 @@
 function utils = getUtils
     % submodules
     utils.units = getUnits;
+    utils.math = getMath;
     utils.operators = getOperators;
     utils.exp = getExp;
     utils.os = getOS;
     utils.xl = getXL;
     utils.std = getOperators;
     utils.time = getTime;
+    utils.debug = getDebug;
 
     % methods
     utils.globalize = @globalize;
@@ -38,6 +39,19 @@ function globalize(fun)
     nameparts = split(fun,'.');
 %     eval(['assignin(''base'',''' nameparts{end} ''', ' fun ')']);
     evalin('base',['assignin(''base'',''' nameparts{end} ''', ' fun ')']);
+end
+
+% ---------------------------------------- MATH ----------------------------------------
+
+% return the mathematics submodule
+function math = getMath
+    math.vdist = @vdist;
+end
+
+% return the Euclidean distance (distance between two vectors)
+function d = vdist(u,v)
+   s = u-v;
+   d = sqrt(s*s');
 end
 
 % ---------------------------------------- OPERATORS ----------------------------------------
@@ -114,9 +128,11 @@ end
 % designated by the elements of 'step'
 function ret = slice(array,step)
     if numel(step)>1
+        ret{1,:} = array(1:step(1));
         for i=1:length(step)-1
-            ret{i,:} = array(step(i):step(i+1)-1);
+            ret{i+1,:} = array(step(i):step(i+1)-1);
         end
+        ret{length(step),:} = array(step(length(step)-1):end);
     else
         for i=0:floor(length(array)/step)-1
             ret(i+1,:) = array((i*step)+1:(i+1)*step);
@@ -213,6 +229,7 @@ function exp = getExp
     exp.piecewise = @piecewise;
     exp.bool = @bool;
     exp.logical_eval = @logical_eval;
+    exp.closest = @closest;
 end
 
 % perform piecewise function on array
@@ -286,6 +303,24 @@ end
 
 % return a uniform neighborhood around each point passed in param 'points'
 function out = neighborhood(array,points,width)
+end
+
+% return the element in array which is closest to 'number'
+function [match, idx] = closest(array,number)
+    array = sort(array);
+    for i=1:length(array)
+        if array(i)>=number
+            if i-1
+                dif = abs(number-array(i-1:i));
+                idx = i-2 + find(dif==min(dif)); 
+                match = array(idx); return;
+            else
+                match = array(i);
+                idx = i;
+                return; 
+            end
+        end       
+    end
 end
 
 % ---------------------------------------- UNITS ----------------------------------------
@@ -479,10 +514,17 @@ end
 % return debugging submodule
 function debug = getDebug
     debug.nargCmp = @nargCmp;
+    debug.demote = @demote;
 end
 
 % check the number of arguments, and if unequal, display param 'msg' as an error
 % <internal function>
 function nargCmp(a,b,msg)
     if a~=b error(msg), end
+end
+
+% demote an error to a warning
+function demote(err)
+    msg = getReport(err);
+    warning(msg)
 end
