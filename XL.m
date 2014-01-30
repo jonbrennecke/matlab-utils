@@ -67,12 +67,12 @@ classdef XL
 		% return the row at param 'index'
 		function cells = getRow(sheet,index)
 		    [numcols,~] = size(sheet);
-		    cells = sheet.Range(strcat('A',num2str(index),':',upper(hexavigesimal(numcols)),num2str(index)));
+		    cells = sheet.Range(strcat('A',num2str(index),':',upper(Units.hexavigesimal(numcols)),num2str(index)));
 		end
 
 		% set the cell range starting at the point passed in param 'position'
 		function setCells(sheet,position,data)
-		    range = sheet.Range([ upper(hexavigesimal(position(1))) num2str(position(2)) ':'  upper(hexavigesimal(position(1) + size(data,2) - 1)) num2str(position(2) + size(data,1) -1) ]);
+		    range = sheet.Range([ upper(Units.hexavigesimal(position(1))) num2str(position(2)) ':'  upper(Units.hexavigesimal(position(1) + size(data,2) - 1)) num2str(position(2) + size(data,1) -1) ]);
 		    set(range, 'Value', data);
 		end
 
