@@ -13,11 +13,10 @@ classdef Units
 	properties (SetAccess = private)
 	end
 	
-	events
+	events   
 	end
 
 	methods
-		
 
 		function this = Units
 			% this class is mostly just a container for various functions
