@@ -17,7 +17,8 @@ classdef String
 
 		% Constructor
 		function this = String(value)
-			if class(value) == char, this.value = value; end
+			% if class(value) == char, this.value = value; end
+			this.value = value;
 		end
 
 		% split the string at 'delimiter'

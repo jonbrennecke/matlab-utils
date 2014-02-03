@@ -54,6 +54,16 @@ classdef XL
 			end
 		end
 
+		% remove one or more sheets from the active workbook
+		function rmSheets(this,sheets)
+			if iscell(sheets)
+				for i=1:length(sheets)
+					invoke(sheets{i}, 'Delete');
+				end
+			else, invoke(sheets{i}, 'Delete');
+			end
+		end
+
 	end % methods
 
 	methods (Static)
