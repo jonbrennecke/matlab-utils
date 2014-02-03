@@ -28,10 +28,10 @@ classdef OS
 
 	methods (Static)
 
-		function text = open_file(filename)
+		function text = open(filename)
 		    fid = fopen(filename);
 		    content = fread(fid,'*char');
-		    text = split(content,'\n');
+		    text = Utils.split(content,'\n');
 		end
 
 	end % static methods
