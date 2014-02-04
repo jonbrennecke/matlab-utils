@@ -28,13 +28,6 @@ classdef DateTime
 
 	end
 
-	% private properties
-	properties (SetAccess = private)
-
-		% format;
-
-	end
-
 	% Constants
 	properties (Constant = true, Hidden, SetAccess = private, GetAccess = private)
 
@@ -113,6 +106,8 @@ classdef DateTime
 					% TODO
 
 				else % matched
+
+					% TODO factor meridian into calculation, convert to military time
 					
 					this.month = str2num( matches.month );
 					this.day = str2num( matches.day );
@@ -137,7 +132,16 @@ classdef DateTime
 
 		end
 
-		function toString(this)
+		% @return { char } 'str' - string representation of this object
+		function str = toString(this)
+			str = [ ... 
+				sprintf( '%02d', this.month ) '/' 		...
+				sprintf( '%02d', this.day ) '/' 		...
+				sprintf( '%04d', this.year ) ','		...
+				sprintf( '%02d', this.hour ) ':' 		...
+				sprintf( '%02d', this.minute ) ':' 		...
+				sprintf( '%02d', this.second ) ' AM'	...
+			];
 		end
 
 		% return as a 32-bit integer in Unix time (seconds since Jan. 1st 1970 00:00:00 )
@@ -159,11 +163,16 @@ classdef DateTime
 			tDelta = this.toEpoch() - tOther.toEpoch();
 		end
 
+		% return a clone of this as a new DateTime object
+		function newDTime = clone(this)
+			newDTime = DateTime( this.toString() );	
+		end
+
 	end % methods
 
 	methods (Static)
 
-		% month -> days (since jan 1st)
+		% month -> days (since jan 1st of this year)
 		% TODO +1 day in leapyears
 		% @param { int } month - integer representation of the given month
 		function days = m2d(month,day)
@@ -182,4 +191,4 @@ classdef DateTime
 
 	end % static methods
 
-end % XL
+end % DateTime
