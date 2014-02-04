@@ -1,7 +1,7 @@
 %
 % DateTime object
 %
-% by @jonbrennecke / https://github.com/jonbrennecke
+% created by @jonbrennecke / https://github.com/jonbrennecke
 %`
 % Released under the MIT license (see the accompanying LICENSE.txt)
 %
@@ -19,22 +19,28 @@ classdef DateTime
 		day;
 		hour;
 		minute;
+		second;
 		micro;
 		milli;
+		epoch;
+
+		format;
 
 	end
 
 	% private properties
 	properties (SetAccess = private)
 
-		current_format;
+		% format;
 
 	end
 
 	% Constants
 	properties (Constant = true, Hidden, SetAccess = private, GetAccess = private)
 
+		% ==============================================================
 		% Regular Expression base patterns
+		% ==============================================================
 
 		month__ = '(?<month>0[1-9]|1[0-2])';			% numbers 01-12
 		day__ = '(?<day>0[1-9]|1[0-9]|2[0-9]|3[0-1])';	% numbers 01-31
@@ -44,21 +50,23 @@ classdef DateTime
 		sec__ = '(?<sec>\d{2}|\d{1})';					% group of 2 numbers | 1 number [0-9]
 		meridian__ ='(?<meridian>AM|am|PM|pm)'; 		% AM | PM
 
-		% Regular Expressions constants for various DateTime formattings
-
-		% M/D/Y | M-D-Y | M\D\Y | M D Y
+		% matches M/D/Y | M-D-Y | M\D\Y | M D Y
 		DEFAULT_DATE = [ ...
 			DateTime.month__ '(\/|\\|\-|\s+?)' ...
 			DateTime.day__ '(\/|\\|\-|\s+?)' ...
 			DateTime.year__  ...
 		];
 
-		% H:M:S
+		% matches H:M:S
 		DEFAULT_TIME = [ ...
 			DateTime.hour__  '(\:)' ...
 			DateTime.min__   '(\:)' ...
 			DateTime.sec__ ...
 		];
+
+		% ==============================================================
+		% Regular Expressions constants for various DateTime formattings
+		% ==============================================================
 
 		DEFAULT = [ ...
 			DateTime.DEFAULT_DATE '(.*?)' ...
@@ -87,21 +95,83 @@ classdef DateTime
 	methods
 		
 		% Constructor
+		% @param { char } 'str' - string representation of a DateTime object
+		% @param { char } 'fmt' - string representation of a DateTime format
 		function this = DateTime(str,fmt)
+
+			% if no formatting string is provided, set the format to DEFAULT
+			if( ~exist('fmt') )
+				this.format = 'DEFAULT';
+			end
+
 			if( exist('str') ) 
 
-				disp( regexp(str,this.DEFAULT,'names') )
+				matches = regexp(str,eval(['this.' this.format ]),'names');
 
+				if( class(matches) ~= 'struct' ) % failed to match
+					
+					% TODO
+
+				else % matched
+					
+					this.month = str2num( matches.month );
+					this.day = str2num( matches.day );
+					this.year = str2num( matches.year );
+					this.hour = str2num( matches.hour );
+					this.minute = str2num( matches.min );
+					this.second = str2num( matches.sec );
+
+				end
 			end
+
+		end % Constructor
+
+		% set the format string
+		% @param { char } 'fmt' - string representation of a DateTime format
+		function setFormat(this,fmt)
+			this.format = fmt;
 		end
 
-		function setFormat(fstr)
-			
+		% 
+		function this = set(this)
+
 		end
+
+		function toString(this)
+		end
+
+		% return as a 32-bit integer in Unix time (milliseconds since Jan. 1st 1970 00:00:00 )
+		function epoch = toEpoch(this)
+			% TODO fix leap year calculation
+			% currently just using 11, (leap year days added 1970-2013)
+			epoch = ( this.year - 1970 ) * 365 + ( 11 );
+		end
+
+		% compare with another DateTime object
+		% @param { DateTime } 'tOther' - object to compare with
+		function tDelta = cmp(this,tOther)
+
+		end
+
+
 
 	end % methods
 
 	methods (Static)
+
+		% month -> days (since jan 1st)
+		function m2d(month)
+		end
+
+		% returns whether or not the given year is a leapyear
+		% @return { boolean } - 
+		function isLeapYear(year)
+		end
+
+		% 
+		function leapDays(year)
+		end
+
 	end % static methods
 
 end % XL
