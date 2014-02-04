@@ -140,27 +140,35 @@ classdef DateTime
 		function toString(this)
 		end
 
-		% return as a 32-bit integer in Unix time (milliseconds since Jan. 1st 1970 00:00:00 )
+		% return as a 32-bit integer in Unix time (seconds since Jan. 1st 1970 00:00:00 )
 		function epoch = toEpoch(this)
 			% TODO fix leap year calculation
 			% currently just using 11, (leap year days added 1970-2013)
-			epoch = ( this.year - 1970 ) * 365 + ( 11 );
+			epoch = ( this.year - 1970 ) * 365 + ( 11 ); % number of days since unix epoch + days added by leapyears
+			epoch = ( epoch + this.m2d(this.month,this.day) ) * 86400; % plus number of days into current year, converted to seconds
+			epoch = epoch + ( ( this.hour * 60 + this.minute ) * 60 + this.second ); % plus hour, min, sec offset from time-of-day
+		end
+
+		% convert epoch time to month, day, year, hour, minute, second
+		function fromEpoch(this,epoch)
 		end
 
 		% compare with another DateTime object
 		% @param { DateTime } 'tOther' - object to compare with
 		function tDelta = cmp(this,tOther)
-
+			tDelta = this.toEpoch() - tOther.toEpoch();
 		end
-
-
 
 	end % methods
 
 	methods (Static)
 
 		% month -> days (since jan 1st)
-		function m2d(month)
+		% TODO +1 day in leapyears
+		% @param { int } month - integer representation of the given month
+		function days = m2d(month,day)
+			numdays = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+			days = sum( numdays(1:month-1) ) + day;
 		end
 
 		% returns whether or not the given year is a leapyear
