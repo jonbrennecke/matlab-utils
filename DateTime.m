@@ -2,7 +2,7 @@
 % DateTime object
 %
 % created by @jonbrennecke / https://github.com/jonbrennecke
-%`
+%
 % Released under the MIT license (see the accompanying LICENSE.txt)
 %
 % Modelled after the 'DateTime' class in PHP 5
@@ -159,6 +159,7 @@ classdef DateTime
 
 		% compare with another DateTime object
 		% @param { DateTime } 'tOther' - object to compare with
+		% @return { int } tDelta - number of seconds between DateTime objects
 		function tDelta = cmp(this,tOther)
 			tDelta = this.toEpoch() - tOther.toEpoch();
 		end

@@ -35,7 +35,7 @@ classdef XL
 			workbook.triggered = invoke(this.Workbooks, 'Add');
 			this.Sheets = this.Excel.ActiveWorkBook.sheets;
 			invoke(workbook.triggered,'Activate');
-
+			
 		end
 
 		% add a single sheet to the active workbook
@@ -43,7 +43,11 @@ classdef XL
 		function sheet = addSheet(this,sheetname)
 			sheet = invoke(this.Sheets,'Add');
 			invoke(sheet, 'Activate');
-			sheet.name = sheetname;
+			try
+				sheet.name = sheetname;
+			catch
+				sheet.name = sheetname(1:31);
+			end
 		end
 
 		% add multiple sheets to the active workbook
@@ -62,6 +66,13 @@ classdef XL
 				end
 			else, invoke(sheets{i}, 'Delete');
 			end
+		end
+
+		% clear the default sheets
+		function rmDefaultSheets(this)
+			this.Sheets.Item(['Sheet1']).Delete;
+			this.Sheets.Item(['Sheet2']).Delete;
+			this.Sheets.Item(['Sheet3']).Delete;
 		end
 
 	end % methods
