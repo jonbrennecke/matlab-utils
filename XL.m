@@ -75,6 +75,11 @@ classdef XL
 			this.Sheets.Item(['Sheet3']).Delete;
 		end
 
+		% save the Active Workbook as 'filename'
+		function saveAs(this,filename)
+			this.Excel.ActiveWorkBook.SaveAs(filename);
+		end
+
 	end % methods
 
 	methods (Static)
