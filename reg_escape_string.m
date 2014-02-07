@@ -5,6 +5,6 @@
 %
 % @see PHP's 'preg_quote' / http://php.net/manual/en/function.preg-quote.php
 %
-function str = reg_escape_string(str)
-	
+function newStr = reg_escape_string(str)
+	% newStr = regexprep(str,expression,)
 end

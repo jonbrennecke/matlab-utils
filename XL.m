@@ -24,19 +24,59 @@ classdef XL
 		% Constructor
 		% create a new ActiveX connection to Excel
 		% @return { COM.Excel_Application } : handle to the ActiveX object
-		function this = XL
+		function this = XL( filename )
 
-			% create a new ActiveX connection to Excel
-			this.Excel = actxserver('Excel.Application');
-			set(this.Excel, 'Visible', 1);
+			% if XL is passed a filename, then create try to find an instance of Excel
+			% with the given name
+			if exist('filename')
+				this.Excel = actxGetRunningServer('Excel.Application');
+				set(this.Excel,'Visible',1);
+				this.Workbooks = this.Excel.Workbooks;
 
-			% add a workbooks and an empty sheets object
-			this.Workbooks = this.Excel.Workbooks;
-			workbook.triggered = invoke(this.Workbooks, 'Add');
-			this.Sheets = this.Excel.ActiveWorkBook.sheets;
-			invoke(workbook.triggered,'Activate');
+				% the file may already be open in Excel, so see if it is...
+				try
+					for i=1:this.Workbooks.Count
+						if strcmpi(this.Workbooks.Item(i).Name, filename)
+							this.Workbooks.Item(i).Activate()
+							this.Sheets = this.Excel.ActiveWorkBook.sheets;
+							break
+						end
+					end
+				catch err
+					% display the error as a warning
+					msg = getReport(err);
+					warning(msg)
+				end
+
+				% if the file wasn't already open in Excel, open it
+				if isempty(this.Sheets)
+					try
+						% now try opening the spreadsheet
+						this.Workbooks.Open(filename);
+						this.Sheets = this.Excel.ActiveWorkBook.sheets;
+
+					catch err
+						% display the error as a warning
+						msg = getReport(err);
+						warning(msg)
+					end
+
+				end
+
+			% if no filename is passed to the XL Constructor, create a blank Excel workbook
+			else 
+				% create a new ActiveX connection to Excel
+				this.Excel = actxserver('Excel.Application');
+				set(this.Excel, 'Visible', 1);
+
+				% add a workbooks and an empty sheets object
+				this.Workbooks = this.Excel.Workbooks;
+				workbook.triggered = invoke(this.Workbooks, 'Add');
+				this.Sheets = this.Excel.ActiveWorkBook.sheets;
+				invoke(workbook.triggered,'Activate');
+			end
 			
-		end
+		end % end Constructor
 
 		% add a single sheet to the active workbook
 		% @return { Interface.Microsoft_Excel_14.0_Object_Library._Worksheet } - handle to the new sheet
@@ -86,8 +126,9 @@ classdef XL
 
 		% return the size of a worksheet
 		function [numcols,numrows] = sheetSize(sheet)
-		    numcols = sheet.Range('A1').End('xlToRight').Column;
-		    numrows = sheet.Range('A1').End('xlDown').Row;
+			% TODO calc of numcols is a shitty hack; fix this
+		    numcols = sheet.Range('a1').End('xlToRight').End('xlToRight').End('xlToRight').Column;
+		    numrows = sheet.Range('a65536').End('xlUp').Row;
 		end
 
 		% return the row at param 'index'
@@ -100,6 +141,12 @@ classdef XL
 		function setCells(sheet,position,data)
 		    range = sheet.Range([ upper(Units.hexavigesimal(position(1))) num2str(position(2)) ':'  upper(Units.hexavigesimal(position(1) + size(data,2) - 1)) num2str(position(2) + size(data,1) -1) ]);
 		    set(range, 'Value', data);
+		end
+
+		% gets the values of 'sheet' from [ position(1), position(2) ], to [ position(3) position(4) ]
+		function cells = getCells(sheet,position)
+			range = sheet.Range([ upper(Units.hexavigesimal(position(1))) num2str(position(2)) ':'  upper(Units.hexavigesimal(position(1) + position(3) - 1)) num2str(position(2) + position(4) -1) ]);
+			cells = range.Value;
 		end
 
 	end % static methods
