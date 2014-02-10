@@ -138,9 +138,12 @@ classdef XL
 		end
 
 		% set the cell range starting at the point passed in param 'position'
-		function setCells(sheet,position,data)
+		function setCells(sheet,position,data,clr)
 		    range = sheet.Range([ upper(Units.hexavigesimal(position(1))) num2str(position(2)) ':'  upper(Units.hexavigesimal(position(1) + size(data,2) - 1)) num2str(position(2) + size(data,1) -1) ]);
 		    set(range, 'Value', data);
+		    if exist('clr') % if the color is passed, color the range
+		    	range.Interior.Color = clr;
+		    end
 		end
 
 		% gets the values of 'sheet' from [ position(1), position(2) ], to [ position(3) position(4) ]
