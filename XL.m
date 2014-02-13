@@ -3,7 +3,7 @@
 %
 % by @jonbrennecke / https://github.com/jonbrennecke
 %
-% Released under the MIT license (see the accompanying LICENSE.txt)
+% Released under the MIT license (see the accompanying LICENSE.md)
 %  
 classdef XL
 
@@ -23,13 +23,17 @@ classdef XL
 		
 		% Constructor
 		% create a new ActiveX connection to Excel
+		% @param filename { string } - either (1.) a full filename and absolute path to an Excel 
+		% readable file, (2.) the filename (absolute path is unnecessary) of a file already open in Excel
+		% or (3.) If none is provided, the XL constructor will open a new Excel instance.
 		% @return { COM.Excel_Application } : handle to the ActiveX object
 		function this = XL( filename )
 
 			% if XL is passed a filename, then create try to find an instance of Excel
 			% with the given name
 			if exist('filename')
-				this.Excel = actxGetRunningServer('Excel.Application');
+				% this.Excel = actxGetRunningServer('Excel.Application');
+				this.Excel = actxserver('Excel.Application');
 				set(this.Excel,'Visible',1);
 				this.Workbooks = this.Excel.Workbooks;
 
@@ -127,7 +131,7 @@ classdef XL
 		% return the size of a worksheet
 		function [numcols,numrows] = sheetSize(sheet)
 			% TODO calc of numcols is a shitty hack; fix this
-		    numcols = sheet.Range('a1').End('xlToRight').End('xlToRight').End('xlToRight').Column;
+		    numcols = sheet.Range('a1').End('xlToRight').End('xlToRight').End('xlToRight').End('xlToRight').Column;
 		    numrows = sheet.Range('a65536').End('xlUp').Row;
 		end
 
@@ -147,9 +151,47 @@ classdef XL
 		end
 
 		% gets the values of 'sheet' from [ position(1), position(2) ], to [ position(3) position(4) ]
+		% @param sheet { Interface.Microsoft_Excel_XX.X_Object_Library._Worksheet } - ActiveX pointer to an Excel worksheet
+		% @param position { array of length = 4 } - range of cells to return in the format [ starting x,y, ending x,y ]
 		function cells = getCells(sheet,position)
 			range = sheet.Range([ upper(Units.hexavigesimal(position(1))) num2str(position(2)) ':'  upper(Units.hexavigesimal(position(1) + position(3) - 1)) num2str(position(2) + position(4) -1) ]);
 			cells = range.Value;
+		end
+
+		% set or get the width of a specific column
+		% @param sheet { Interface.Microsoft_Excel_XX.X_Object_Library._Worksheet } - ActiveX pointer to an Excel worksheet
+		% @param index { string or int } - index of the columns of which to set the width
+		% @paam width { int } - new width of the column ( OPTIONAL - if none is provided, the method will act as a getter ) 
+		function w = columnWidth(sheet,index,width)
+			if ( exist('index') && isstr(index) )
+				if ( exist('width') )
+					sheet.Columns.Item( Units.hexavigesimal(index) ).ColumnWidth = width;
+					w = width;
+				else % if no width is provided, act as a getter and return the ColumnWidth
+					w = sheet.Columns.Item( Units.hexavigesimal(index) ).ColumnWidth;
+				end
+			elseif ( exist('index') && ~isstr(index) )
+				if ( exist('width') )
+					sheet.Columns.Item( index ).ColumnWidth = width;
+					w = width;
+				else % if no width is provided, act as a getter and return the ColumnWidth
+					w = sheet.Columns.Item( index ).ColumnWidth;
+				end
+			end
+		end
+
+		% set the width of a range of columns
+		% @param sheet { Interface.Microsoft_Excel_XX.X_Object_Library._Worksheet } - ActiveX pointer to an Excel worksheet
+		% @param index { string or int } - index of the columns of which to set the width
+		% @paam width { int } - new width of the column
+		function width = columnsWidth(sheet,indices,width)
+			for i=1:length(indices)
+				if iscell(indices)
+					XL.columnWidth(sheet,indices{i},width);
+					continue;
+				end
+				XL.columnWidth(sheet,indices(i),width);
+			end
 		end
 
 	end % static methods
