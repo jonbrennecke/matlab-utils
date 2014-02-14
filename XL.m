@@ -18,7 +18,7 @@ classdef XL
 	
 	events
 	end
-
+ 
 	methods
 		
 		% Constructor
@@ -138,15 +138,24 @@ classdef XL
 		% return the row at param 'index'
 		function cells = getRow(sheet,index)
 		    [numcols,~] = size(sheet);
-		    cells = sheet.Range(strcat('A',num2str(index),':',upper(Units.hexavigesimal(numcols)),num2str(index)));
+		    cells = sheet.Range(strcat('A', num2str(index),':', upper(Units.hexavigesimal(numcols)),num2str(index)));
 		end
 
 		% set the cell range starting at the point passed in param 'position'
-		function setCells(sheet,position,data,clr)
+		function range = setCells( sheet, position, data, clr, autofit )
 		    range = sheet.Range([ upper(Units.hexavigesimal(position(1))) num2str(position(2)) ':'  upper(Units.hexavigesimal(position(1) + size(data,2) - 1)) num2str(position(2) + size(data,1) -1) ]);
-		    set(range, 'Value', data);
+		    range.Value = data;
 		    if exist('clr') % if the color is passed, color the range
-		    	range.Interior.Color = clr;
+		    	if isstr(clr) && ~strcmpi('false',clr)
+			    	range.Interior.Color = hex2dec(clr);
+		    	elseif isstr(clr) && strcmpi('false',clr)
+		    		% do nothing
+			    else
+			    	range.Interior.Color = clr;
+			    end	
+		    end
+		    if exist('autofit')
+		    	XL.autofit(range);
 		    end
 		end
 
@@ -156,6 +165,18 @@ classdef XL
 		function cells = getCells(sheet,position)
 			range = sheet.Range([ upper(Units.hexavigesimal(position(1))) num2str(position(2)) ':'  upper(Units.hexavigesimal(position(1) + position(3) - 1)) num2str(position(2) + position(4) -1) ]);
 			cells = range.Value;
+		end
+
+		% for each column in 'range', set the width of that column to the length (in characters) of the cell with the
+		% largest number of characters.
+		function autofit( range ) 
+			for i = 1:range.Columns.Count
+				col = range.Columns.Item(i);
+				values = col.Value;
+				if isstr( values ), values = { values }; end
+				width = max( cellfun('length', values ) );
+				col.ColumnWidth = width;
+			end
 		end
 
 		% set or get the width of a specific column
