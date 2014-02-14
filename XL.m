@@ -82,7 +82,7 @@ classdef XL
 			
 		end % end Constructor
         
-        % 
+        % appends a sheet with some information about where this file came from
         function sourceInfo(this,callingScript)
             sheet = this.addSheet('Data Source Info');
             info = dir([ callingScript '.m']);
@@ -140,6 +140,9 @@ classdef XL
 	methods (Static)
 
 		% return the size of a worksheet
+		% @param sheet { Interface.Microsoft_Excel_XX.X_Object_Library._Worksheet } - ActiveX pointer to an Excel worksheet
+		% @return numcols { int } - the number of columns
+		% @return numrows { int } - the number of rows
 		function [numcols,numrows] = sheetSize(sheet)
 			% TODO calc of numcols is a shitty hack; fix this
 		    numcols = sheet.Range('a1').End('xlToRight').End('xlToRight').End('xlToRight').End('xlToRight').Column;
@@ -147,12 +150,21 @@ classdef XL
 		end
 
 		% return the row at param 'index'
+		% @param sheet { Interface.Microsoft_Excel_XX.X_Object_Library._Worksheet } - ActiveX pointer to an Excel worksheet
+		% @param index { int } - heightwise index of which row to select
 		function cells = getRow(sheet,index)
 		    [numcols,~] = size(sheet);
 		    cells = sheet.Range(strcat('A', num2str(index),':', upper(Units.hexavigesimal(numcols)),num2str(index)));
 		end
 
 		% set the cell range starting at the point passed in param 'position'
+		% @param sheet { Interface.Microsoft_Excel_XX.X_Object_Library._Worksheet } - ActiveX pointer to an Excel worksheet
+		% @param position { array of length = 2 } - starting x,y location of where to place the data
+		% @param data { cell or array } - values to write to the sheet
+		% @param clr { string or int } - OPTIONAL color value to color the cell range, can be either (1.) color as a hexidecimal string like 'FFFFFF'
+		% or (2.) as the boolean string value 'false', or (3.) an integer color representation like 16777215 (for 'FFFFFF').
+		% @param autofit { * } - OPTIONAL boolean to be interpreted as whether or not to apply column width autofitting to the range. Can be anything, 
+		% so long as it exists, but preferably the string 'true'.
 		function range = setCells( sheet, position, data, clr, autofit )
 		    range = sheet.Range([ upper(Units.hexavigesimal(position(1))) num2str(position(2)) ':'  upper(Units.hexavigesimal(position(1) + size(data,2) - 1)) num2str(position(2) + size(data,1) -1) ]);
 		    range.Value = data;
@@ -180,6 +192,7 @@ classdef XL
 
 		% for each column in 'range', set the width of that column to the length (in characters) of the cell with the
 		% largest number of characters.
+		% @param range { Interface.Microsoft_Excel_XX.X_Object_Library.Range } - range of cells to autofit
 		function autofit( range ) 
 			for i = 1:range.Columns.Count
 				col = range.Columns.Item(i);
