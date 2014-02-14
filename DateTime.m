@@ -38,7 +38,7 @@ classdef DateTime
 		month__ = '(?<month>0[1-9]|1[0-2])';			% numbers 01-12
 		day__ = '(?<day>0[1-9]|1[0-9]|2[0-9]|3[0-1])';	% numbers 01-31
 		year__ = '(?<year>\d{4}|\d{2})';				% group of 4 numbers | group of 2 numbers
-		hour__ = '(?<hour>0[0-9]|1[0-9]|2[0-4])';		% numbers 00-24
+		hour__ = '(?<hour>0[0-9]|1[0-9]|2[0-4])';		% numbers 00-23
 		min__ = '(?<min>\d{2}|\d{1})';					% group of 2 numbers | 1 number [0-9]
 		sec__ = '(?<sec>\d{2}|\d{1})';					% group of 2 numbers | 1 number [0-9]
 		meridian__ ='(?<meridian>AM|am|PM|pm)'; 		% AM | PM
