@@ -19,8 +19,8 @@ classdef Units
 	methods
 
 		function this = Units
-			% this class is mostly just a container for various functions
-			% with no properties to initialize
+			% this class is mostly just a container for various functions (i.e. a namespace)
+			% with no properties to initialize as of now
 		end
 
 
@@ -69,6 +69,7 @@ classdef Units
 
 		% Conversion from hexavigesimal (base 26) to double
 		function number = hexavigesimal_reverse(string)
+			string = lower(string);
 		    number = 0;
 		    for i=1:length(string)-1
 		        number = (number + Units.numerical_cast(string(i)) + 1) * 26;
