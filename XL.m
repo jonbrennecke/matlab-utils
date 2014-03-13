@@ -160,8 +160,7 @@ classdef XL
 		% @return numcols { int } - the number of columns
 		% @return numrows { int } - the number of rows
 		function [numcols,numrows] = sheetSize(sheet)
-			% TODO calc of numcols is a shitty hack; fix this
-			numcols = sheet.Range('a1').End('xlToRight').End('xlToRight').End('xlToRight').End('xlToRight').Column;
+			numcols = sheet.UsedRange.Columns.Count;
 			numrows = sheet.Range('a65536').End('xlUp').Row;
 		end
 

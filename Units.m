@@ -100,6 +100,10 @@ classdef Units
 		    else num = floor(log10(num)+1); end
 		end
 
+		function result = base26(in)
+			result = Units.hexavigesimal(in);
+		end
+
 	end % static methods
 
 end % XL
