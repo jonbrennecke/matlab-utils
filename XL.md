@@ -132,13 +132,43 @@ Documentation for the VBA Object Model Reference can be found on the [Microsoft 
 		- Set the values of the cell range starting at the point 'position'.
 - **getCells** : 
 	- Syntax: `[ cells, range ] = xl.getCells( sheet, position );`
-	> - Parameters:
-	> 	- sheet : handle to a sheet. 
-	> 	- index : heightwise index of which row to select (as an integer). 
-	> - Return Value: 
-	> 	- cell array with the values in the designated row.
-	> - Description:
-	> 	- Returns the values of the row at an integer index.
+	- Parameters:
+		- sheet : handle to a sheet. 
+		- position: range of cells to return (as an array in the format [ starting x,y, ending x,y ])
+	- Return Value: 
+		- cells : cell array with the values.
+		- range : range object.
+	- Description:
+		- Returns the values of 'sheet' from [ position(1), position(2) ], to [ position(3) position(4) ]
+- **autofit** : 
+	- Syntax: `xl.autofit( range );`
+	- Parameters:
+		- range : range of cells to autofit.
+	- Return Value: 
+		- this method has no return value.
+	- Description:
+		- For each column in 'range', sets the width of that column to the length (in characters) of the cell with the largest number of characters.
+- **columnWidth** : 
+	- Syntax: `width = xl.columnWidth( sheet, index, width );`
+	- Parameters:
+		- sheet - handle to an Excel worksheet
+		- index - index of the columns of which to set the width (as a string or integer)
+		- width - new width of the column ( OPTIONAL - if none is provided, the method will act as a getter rather than a setter ) 
+	- Return Value: 
+		- the width of the designated column.
+	- Description:
+		- Set or get the width of the designated column.
+- **columnsWidth** : 
+	- Syntax: `xl.columnsWidth( sheet, indices, width );`
+	- Parameters:
+		- sheet - handle to an Excel worksheet
+		- indices - indices of the columns of which to set the width (as a string or integer)
+		- width - new width of the columns
+	- Return Value: 
+		- this method has no return value.
+	- Description:
+		- Set or get the width of the designated columns.
+
 
 Constructor
 create a new ActiveX connection to Excel
