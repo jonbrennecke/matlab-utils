@@ -1,7 +1,7 @@
 Documentation for XL.m
 ======================
 
-###Basic Usage
+##Basic Usage
 
 The XL.m Matlab file is a 
 
@@ -16,6 +16,8 @@ XL object
 *static* methods are bound to the class at compile time, whereas *dynamic* methods are bound to an object (instance of the class) at runtime.
 
 Documentation for the VBA Object Model Reference can be found on the [Microsoft Developer Network](http://msdn.microsoft.com/en-us/library/bb149081.aspx).
+
+##Technical Documentation
 
 ###Properties:
 	
@@ -96,7 +98,7 @@ Documentation for the VBA Object Model Reference can be found on the [Microsoft 
 ####Static:
 
 - **sheetSize** : 
-	- Syntax: `xl.sheetSize( sheet );`
+	- Syntax: `[numcols,numrows] = xl.sheetSize( sheet );`
 	- Parameters:
 		- sheet : handle to a sheet. 
 	- Return Value: 
@@ -104,15 +106,39 @@ Documentation for the VBA Object Model Reference can be found on the [Microsoft 
 	- Description:
 		- Returns the size of a worksheet as an array of [ # columns, # rows ].
 - **getRow** : 
-	- Syntax: `xl.getRow( sheet, index );`
+	- Syntax: `cells = xl.getRow( sheet, index );`
 	- Parameters:
 		- sheet : handle to a sheet. 
+		- index : heightwise index of which row to select (as an integer). 
 	- Return Value: 
-		- array containing [ # columns, # rows ].
+		- cell array with the values in the designated row.
 	- Description:
-		- Returns the size of a worksheet as an array of [ # columns, # rows ].
-
-
+		- Returns the values of the row at an integer index.
+- **setCells** : 
+	- Syntax: `range = xl.setCells( sheet, position, data, color, autofit );`
+	- Parameters:
+		- sheet : handle to a sheet. 
+		- position :  starting x,y location of where to place the data (as an array, eg. [x,y]). 
+		- data : values to write to the sheet (as an array or cell array).
+		- color : OPTIONAL color value to color the cell range. Can be:
+			- color as a hexidecimal string like 'FFFFFF'
+			- the boolean string value 'false', in which case no color is given.
+			- an integer color representation like 16777215 (for 'FFFFFF').
+		- autofit : OPTIONAL boolean string designating whether or not to apply column width autofitting to the range. 
+			- NOTE: Since Matlab doesn't have strict boolean types, we're comparing strings here. So to be 'true' the value can be anything but 'false'. 
+	- Return Value: 
+		- Range object, containing the cells in the designated area.
+	- Description:
+		- Set the values of the cell range starting at the point 'position'.
+- **getCells** : 
+	- Syntax: `[ cells, range ] = xl.getCells( sheet, position );`
+	> - Parameters:
+	> 	- sheet : handle to a sheet. 
+	> 	- index : heightwise index of which row to select (as an integer). 
+	> - Return Value: 
+	> 	- cell array with the values in the designated row.
+	> - Description:
+	> 	- Returns the values of the row at an integer index.
 
 Constructor
 create a new ActiveX connection to Excel
