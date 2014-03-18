@@ -3,31 +3,65 @@ Documentation for XL.m
 
 ##Basic Usage
 
-The XL.m Matlab file is a 
+The XL object is a simplified means of creating an ActiveX connection to Microsoft Excel. The class is designed to take most of the burden out of everyday Excel tasks, while maintaining the ActiveX interface objects as properties of the class.
 
-creates an instance of an XL object. The object has properties and methods listed below. 
+The properties and methods of the object are listed in the 'Technical Documentation' below. 
 
-"COM is a platform-independent, distributed, object-oriented system for creating binary software components that can interact. COM is the foundation technology for Microsoft's OLE (compound documents) and ActiveX (Internet-enabled components) technologies."
+##Code Examples:
 
+#### creating an empty Excel workbook
+```matlab
+% instantiate an XL object 
 xl = XL;
 
-XL object
+% pass sheet names as a cell array
+sheets = xl.addSheets({ 'Name of 1st sheet', 'Name of 2nd sheet', 'etc...' });
 
-*static* methods are bound to the class at compile time, whereas *dynamic* methods are bound to an object (instance of the class) at runtime.
+% order is important here; the default sheets must be removed *after* new sheets have been created
+xl.rmDefaultSheets();
+```
 
-Documentation for the VBA Object Model Reference can be found on the [Microsoft Developer Network](http://msdn.microsoft.com/en-us/library/bb149081.aspx).
+#### opening an Excel workbook from a file
+```matlab
+
+% open the get file modal
+[ file, path ] = uigetfile({ '*xlsx', 'Excel Spreadsheet (*.xlsx)' }, 'Select Excel File','MultiSelect','Off'); 
+
+% instantiate an XL object from the path 
+xl = XL([ path file ]);
+```
+
+#### writing to a spreadsheet
+```matlab
+
+xl.setCells( 
+	sheet, % a sheet (eg, returned from xl.addSheet(''))
+	[5, 1], % position to write to [x,y]
+	{ 'This', 'is', 'some', 'text', 'data' 
+	'to', 'write', 'to', 'the', 'sheet' }, 
+	FFEE00, % set the background color to hex #FFEE00 (yellow)
+	'true' % autofit the cells
+);
+```
+
 
 ##Technical Documentation
+
+The XL class object has both static and dynamic methods.
+
+*static* methods are bound to the class at compile time, whereas *dynamic* methods are bound to an object (instance of the class) at runtime. Thus, static methods can be called without instantiating the class.
+
+Documentation for the VBA Object Model Reference can be found on the [Microsoft Developer Network](http://msdn.microsoft.com/en-us/library/bb149081.aspx).
 
 ###Properties:
 	
 - **Excel** : *(read only)* - COM Object
-	- ActiveX connection to the running Excel Application. 
+	- ActiveX connection to the running Excel Application (COM Object)
 	- If Excel is not currently running, an instance will be created.
 - **Workbooks** : *(read only)* - Interface Object
-	- 
+	- ActiveX interface to open Workbooks (Interface Object)
 - **Sheets** : *(read only)* - Interface Object
-	- 
+	- ActiveX interface to open Worksheets (Interface Object) 
 
 ###Methods:
 
