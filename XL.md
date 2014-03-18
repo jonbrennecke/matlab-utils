@@ -47,9 +47,7 @@ xl.setCells(
 
 ##Technical Documentation
 
-The XL class object has both static and dynamic methods.
-
-*static* methods are bound to the class at compile time, whereas *dynamic* methods are bound to an object (instance of the class) at runtime. Thus, static methods can be called without instantiating the class.
+The XL class object has both static and dynamic methods. *Static* methods are bound to the class at compile time, whereas *dynamic* methods are bound to an object (instance of the class) at runtime. Thus, static methods can be called without instantiating the class.
 
 Documentation for the VBA Object Model Reference can be found on the [Microsoft Developer Network](http://msdn.microsoft.com/en-us/library/bb149081.aspx).
 
