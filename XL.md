@@ -39,7 +39,7 @@ xl.setCells(
 	[5, 1], % position to write to [x,y]
 	{ 'This', 'is', 'some', 'text', 'data' 
 	'to', 'write', 'to', 'the', 'sheet' }, 
-	FFEE00, % set the background color to hex #FFEE00 (yellow)
+	FFFF00, % set the background color to hex #FFFF00 (yellow)
 	'true' % autofit the cells
 );
 ```
