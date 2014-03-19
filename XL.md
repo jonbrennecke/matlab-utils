@@ -3,7 +3,7 @@ Documentation for XL.m
 
 ##Basic Usage
 
-The XL object is a simplified means of creating an ActiveX connection to Microsoft Excel. The class is designed to take most of the burden out of everyday Excel tasks, while maintaining the ActiveX interface objects as properties of the class.
+The XL object is a simplified means of creating an ActiveX connection to Microsoft Excel. The class is designed to take most of the burden out of everyday Excel tasks, while maintaining the ActiveX interface objects as properties of the class. Most of the methods of this class are convenience methods for Visual Basic (VBA) functions.
 
 The properties and methods of the object are listed in the 'Technical Documentation' below. 
 
@@ -49,7 +49,7 @@ xl.setCells(
 
 The XL class object has both static and dynamic methods. *Static* methods are bound to the class at compile time, whereas *dynamic* methods are bound to an object (instance of the class) at runtime. Thus, static methods can be called without instantiating the class.
 
-Documentation for the VBA Object Model Reference can be found on the [Microsoft Developer Network](http://msdn.microsoft.com/en-us/library/bb149081.aspx).
+Most of the methods are convenience methods for Visual Basic (VBA) functions. Documentation for the VBA Object Model Reference for Excel can be found on the [Microsoft Developer Network](http://msdn.microsoft.com/en-us/library/bb149081.aspx).
 
 ###Properties:
 	
