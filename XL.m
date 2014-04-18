@@ -83,6 +83,8 @@ classdef XL
 		end % end Constructor
 		
 		% appends a sheet with some information about where this file came from
+		% @param callingScript { string } - name of the matlab function from which this script originates 
+		% suggested use with "mfilename('fullpath')" 
 		function sourceInfo(this,callingScript)
 			sheet = this.addSheet('Data Source Info');
 			info = dir([ callingScript '.m']);
@@ -255,5 +257,5 @@ classdef XL
 		end
 
 	end % static methods
-
+   
 end % XL
