@@ -1,5 +1,5 @@
 %
-% An object-oriented handler for various utility functions
+% A namespace of various utility functions
 %
 % by @jonbrennecke / https://github.com/jonbrennecke
 %
@@ -133,11 +133,53 @@ classdef Utils
 		function vivify
 		end
 
-		% map every element of param 'array' to it's keyed element in param 'hash'
+		% map every element of param 'array' to its keyed element in param 'hash'
 		% return the resulting array 
-		function hashmap(array,hash)
+		function hashmap( array, hash )
 		end
+
+
+		% Estimate of the power spectra of a signal using Bartlett's Method
+		% 
+		% Bartlett, M.S. (1948). "Smoothing Periodograms from Time-Series with Continuous Spectra". Nature 161: 686–687.
+		% 
+		% @see http://en.wikipedia.org/wiki/Bartlett%27s_method
+		% @see http://www.mathworks.com/help/matlab/examples/using-fft.html
+		% 
+		% @param signal - data signal
+		% @param m - length of data segments
+		% @param rate - sampling frequency (eg 400Hz)
+		% 
+		% @return power -  
+		% @return freq - 
+		% 
+		function [ pow, freq ] = periodogram( signal, m, rate )
+			k = (length( signal ) / m ) - 1;
+
+			% slice signal into k data segments of length m
+			segments = Utils.slice(signal, m);
+
+			% compute the FFT of each segment, then compute the squared magnitude of the 
+			% result and divide by m
+			period = ( fft(segments,[],2).^2 ) / m;
+			
+			% average each of the k data segments
+			pow = mean( period( 2:end, : ), 2 );
+
+			% discretization frequency
+			df = ( 1 / k * rate );
+
+			freq = ( [1:k] / k ) .* df;
+
+		end
+
+		% Estimate of the power spectra of a signal using Welch's Method
+		% 
+		% 
+		function power = periodogram2( signal, m )
+		end
+
 
 	end % static methods
 
-end % XL
+end % end Utils
