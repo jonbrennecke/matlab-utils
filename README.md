@@ -1,7 +1,9 @@
 matlab-utils
 ============
 
-A bunch of half-baked matlab classes and functions.
-
 #intro:
+
+
+
+See XL.md and Utils.md for complete documentation of those scripts
 
