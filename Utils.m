@@ -139,25 +139,47 @@ classdef Utils
 		end
 
 
-		% Estimate of the power spectra of a signal using Bartlett's Method
+		% Estimate the power spectra of a signal using Bartlett's Method, or, if parameter 'overlap' is specified, using Welch's Method.
+		% This method is based on the concept of using periodogram spectrum estimates, which are the result of converting a signal from the 
+		% time domain to the frequency domain. 
 		% 
-		% Bartlett, M.S. (1948). "Smoothing Periodograms from Time-Series with Continuous Spectra". Nature 161: 686–687.
+		% @see Bartlett, M.S. (1948). "Smoothing Periodograms from Time-Series with Continuous Spectra". Nature 161: 686–687.
+		% @see Welch, P.D. (1967) "The Use of Fast Fourier Transform for the Estimation of Power Spectra: A Method Based on 
+		% Time Averaging Over Short, Modified Periodograms", IEEE Transactions on Audio Electroacoustics, AU-15, 70–73.
 		% 
-		% @see http://en.wikipedia.org/wiki/Bartlett%27s_method
-		% @see http://www.mathworks.com/help/matlab/examples/using-fft.html
+		% @link http://en.wikipedia.org/wiki/Bartlett%27s_method
+		% @link http://en.wikipedia.org/wiki/Welch_method
+		% @link http://www.mathworks.com/help/matlab/examples/using-fft.html
 		% 
 		% @param signal - data signal
 		% @param m - length of data segments
 		% @param rate - sampling frequency (eg 400Hz)
+		% @param overlap - 0% is Bartlett's method
 		% 
-		% @return power -  
-		% @return freq - 
+		% @return pow - estimate of the power spectrum at a given frequency 
+		% @return freq - corresponding frequency vector
 		% 
-		function [ pow, freq ] = periodogram( signal, m, rate )
-			k = (length( signal ) / m ) - 1;
+		function [ pow, freq ] = periodogram( signal, m, rate, overlap )
 
-			% slice signal into k data segments of length m
-			segments = Utils.slice(signal, m);
+			% if the 'overlap' parameter is defined, use the Welch Method and split into overlapping windows
+			if exist( 'overlap' )
+				starts = [ 0 : m - overlap: length( signal ) - m ];
+				ends = starts + m;
+
+				segments = [];
+				for i = 1:length(starts)
+					segments(end+1,:) = signal(starts(i)+1:ends(i));
+				end
+
+				k = size( segments, 1 ) - 1;
+			
+			% if the 'overlap' parameter isn't defined, default to Barlett's Method and use adjacent windows
+			else 
+				% slice signal into k data segments of length m
+				segments = Utils.slice(signal, m);
+
+				k = ( length( signal ) / m ) - 1;
+			end
 
 			% compute the FFT of each segment, then compute the squared magnitude of the 
 			% result and divide by m
@@ -171,12 +193,6 @@ classdef Utils
 
 			freq = ( [1:k] / k ) .* df;
 
-		end
-
-		% Estimate of the power spectra of a signal using Welch's Method
-		% 
-		% 
-		function power = periodogram2( signal, m )
 		end
 
 
