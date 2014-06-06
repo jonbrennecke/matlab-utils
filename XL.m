@@ -127,9 +127,15 @@ classdef XL
 
 		% clear the default sheets
 		function rmDefaultSheets(this)
-			this.Sheets.Item(['Sheet1']).Delete;
-			this.Sheets.Item(['Sheet2']).Delete;
-			this.Sheets.Item(['Sheet3']).Delete;
+
+			% Excel 2013 only creates one default sheet
+			if ( str2num( xl.Excel.version ) >= 15 )
+				this.Sheets.Item(['Sheet1']).Delete;
+			else
+				this.Sheets.Item(['Sheet1']).Delete;
+				this.Sheets.Item(['Sheet2']).Delete;
+				this.Sheets.Item(['Sheet3']).Delete;
+
 		end
 
 		% save the Active Workbook as 'filename'
