@@ -157,9 +157,9 @@ classdef Utils
 		% @param overlap - 0% is Bartlett's method
 		% 
 		% @return pow - estimate of the power spectrum at a given frequency 
-		% @return freq - corresponding frequency vector
+		% @return freq - corresponding frequency vect
 		% 
-		function [ pow, freq ] = periodogram( signal, m, rate, overlap )
+		function [ pow, freq, test ] = periodogram( signal, m, rate, overlap )
 
 			% if the 'overlap' parameter is defined, use the Welch Method and split into overlapping windows
 			if exist( 'overlap' )
@@ -168,7 +168,7 @@ classdef Utils
 
 				segments = [];
 				for i = 1:length(starts)
-					segments(end+1,:) = signal(starts(i)+1:ends(i));
+					segments(end+1,:) = signal( starts(i)+1 : ends(i) );
 				end
 
 				k = size( segments, 1 ) - 1;
@@ -184,6 +184,8 @@ classdef Utils
 			% compute the FFT of each segment, then compute the squared magnitude of the 
 			% result and divide by m
 			period = ( fft(segments,[],2).^2 ) / m;
+
+			test = segments;
 			
 			% average each of the k data segments
 			pow = mean( period( 2:end, : ), 2 );

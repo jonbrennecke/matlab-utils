@@ -133,8 +133,23 @@ classdef XL
 		end
 
 		% save the Active Workbook as 'filename'
-		function saveAs(this,filename)
-			this.Excel.ActiveWorkBook.SaveAs(filename);
+		function saveAs(this,filename,pathname)
+            
+            if ~exist('pathname')
+                pathname = [ pwd '\' ];
+            end
+            
+            % if the file exists, keep iterating through the files and
+            % incrementing n
+            n = 1;
+            filepath = [ pathname filename ];
+			while exist( [filepath '.xlsx'], 'file' ) && n < 1000
+                n = n + 1;
+                filepath = [pathname filename '(' num2str(n) ')' ];
+            end
+
+            this.Excel.ActiveWorkBook.SaveAs(filepath);
+                     
 		end
 
 		% clone
