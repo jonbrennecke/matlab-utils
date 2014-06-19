@@ -1,0 +1,14 @@
+{
+    "name": "matlab-utils",
+    "author": "Jon Brennecke",
+    "description": "general purpose matlab workspace utilities",
+    "version": "1.0.0",
+    "repository": "https://github.com/jonbrennecke/matlab-utils",
+    "main": "include.m",
+    "dependencies": [
+        ""
+    ],
+    "keywords": [
+        "XL", "Excel", "ActiveX"
+    ]
+}
