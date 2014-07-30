@@ -75,9 +75,10 @@ classdef XL
 
 				% add a workbooks and an empty sheets object
 				this.Workbooks = this.Excel.Workbooks;
-				workbook.triggered = invoke(this.Workbooks, 'Add');
+				wb = this.Workbooks.Add;
 				this.Sheets = this.Excel.ActiveWorkBook.sheets;
-				invoke(workbook.triggered,'Activate');
+				wb.Activate;
+				this.Excel.Visible(1);
 			end
 			
 		end % end Constructor
@@ -164,17 +165,20 @@ classdef XL
 		% clone
 		% if 'item' is a sheet, the sheet is cloned into the same workbook
 		% if 'item' is a workbook, a new workbook is generated
-		function clone(this,item)
-			if( strcmpi( class( item ), class( this.Excel.ActiveWorkbook ) ) )
-				workbook = this.Excel.Workbooks.Add;
-				this.Workbooks = this.Excel.Workbooks;   
+		function clone(this)
 
-			elseif strcmpi( class( item ), class( this.Excel.ActiveSheet ) )
-				sheet = this.addSheet( [ item.name  '-copy' ] );
-				[c,r] = this.sheetSize(item);
-				cells = this.getCells( item, [ 1, 1, c, r ] );
-				this.setCells(sheet,[1,1],cells);
+			% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			% clone the workbook into a new workbook
+			% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+			wb = this.Workbooks.Add;
+			tmp = wb.Sheets.Item(1);
+
+			for i=1:this.Sheets.Count
+				this.Sheets.Item(i).Copy(tmp)
 			end
+
+			wb.Activate();
 		end
 
 	end % methods
