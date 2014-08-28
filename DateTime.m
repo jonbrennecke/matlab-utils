@@ -1,4 +1,4 @@
-classdef DateTime
+classdef DateTime < Core
 
 	properties (SetAccess = private)
 		

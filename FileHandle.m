@@ -1,7 +1,7 @@
 % 
 % file handler base class
 % 
-classdef FileHandle < handle
+classdef FileHandle < Core
 
 	properties (Hidden,SetAccess = protected)
 		fd;

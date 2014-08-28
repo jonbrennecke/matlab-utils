@@ -1,19 +1,21 @@
 % 
 % text file handler class
 % 
-classdef EDF < FileHandle & Sorted
+classdef EdfHandle < FileHandle & Sortable
 
 	properties (SetAccess = protected)
 
+		% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		% header properties
+		% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 		% fixed length header constants
 		ver;
 		patientID;
 		recordID;
-		startdate;
 		starttime;
 		bytes;
-		nr; % nr
+		nr;
 		duration;
 		ns;
 
@@ -29,65 +31,104 @@ classdef EDF < FileHandle & Sorted
 		samples;
 		fs;
 
-		record;
+		% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+		% data matrix
+		data;
+		signals = {};
 
 	end
 
 	methods
 
 		% class constructor
-		function this=EDF( edffile )
+		function this=EdfHandle( edffile )
+			
+			% call the FileHandle class constructor with arguments
 			this = this@FileHandle(edffile,'rb');
-			this.read();
+
+			% read the edf file 
+			this.read__();
+
+			% create a vector of unix timestamps
+			times = this.times();
+
+			% create ArrayTimeView objects for each label
+			for i=1:length(this.label)
+				this.signals{i} = ArrayTimeView(this,this.data(i,:),times(i,:));
+			end
+
 		end
 
-		% implementation of the abstract function in the parent class Sorted
-		% returns a vector of unix timestamps equal in size to the data vector
-		function times = times(this,val)
+		% overload the subsref operator to allow calling
+		function varargout = subsref(this,s)
+			if s(1).type ~= '.' 
+				error('EdfHandle is not callable.');
+			end
 
-			% calculate the starting time
-			ts = [ this.startdate ', ' this.starttime];
-			time = DateTime( DateTime.struct_from_datevec(datevec(ts,'dd.mm.yy, HH.MM.SS')) );
+			% passthrough to methods and properties
+			if ismethod(this,s(1).subs) || isprop(this,s(1).subs)
+				if length(s)>1
+					varargout = {this.(s(1).subs)(s(2).subs{:})};
+				else
+					varargout = {this.(s(1).subs)};
+				end
 
-			times = zeros(size(this.record));
-			for i=1:this.ns
-				tick = 1/this.digitalMax(i); % each sample increments the time by this much
-				times(i,:) = time.unix + (1:length(times(i,:)))*tick;
+			% otherwise, match with the signal label names (eg, 'eeg1','emg') and 
+			% pass throught to the ArrayTimeView objects
+			else
+				i = find(cellfun(@(x)strcmp(lower(x),s(1).subs),this.label));
+				if length(s)>1
+					varargout = { subsref(this.signals{i},struct('type','()','subs',s(2).subs{:})) };
+				else
+					varargout = {this.signals{i}};
+				end
 			end
 		end
 
 		% EDFs are sorted by frequency
 		function sorted = sort(this,enum,n)
-			sorted = this.sort_by_frequency__(enum,n,this.record);
+			sorted = this.sort_by_frequency__(enum,n,this.data);
+		end
+
+		% implementation of the abstract function in the parent class Sorted
+		% returns a vector of unix timestamps equal in size to the data vector
+		function times = times(this)
+			times = zeros(size(this.data));
+			for i=1:this.ns
+				tick = 1/this.fs; % each sample increments the time by this much
+				times(i,:) = this.starttime.unix + (1:length(times(i,:)))*tick;
+			end
 		end
 
 	end
 	methods(Access=private)
 
-		function read(this)
+		function read__(this)
 
+			% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			% borrowed from some code by Brett Shoelson, PhD
 			% brett.shoelson@mathworks.com
 			% Copyright 2009 - 2012 MathWorks, Inc.
 			% 8/27/09
+			% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 			% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			% HEADER
 			% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-			this.ver        = str2double(char(fread(this.fd,8)'));
-			this.patientID  = fread(this.fd,80,'*char')';
-			this.recordID   = fread(this.fd,80,'*char')';
-			this.startdate  = fread(this.fd,8,'*char')';% (dd.mm.yy)
-			% this.startdate  = datestr(datenum(fread(this.fd,8,'*char')','dd.mm.yy'), 29); %'yyyy-mm-dd' (ISO 8601)
-			this.starttime  = fread(this.fd,8,'*char')';% (hh.mm.ss)
-			% this.starttime  = datestr(datenum(fread(this.fd,8,'*char')','hh.mm.ss'), 13); %'HH:MM:SS' (ISO 8601)
-			this.bytes      = str2double(fread(this.fd,8,'*char')');
-			reserved       = fread(this.fd,44);
-			this.nr    = str2double(fread(this.fd,8,'*char')');
-			this.duration   = str2double(fread(this.fd,8,'*char')');
-			% Number of signals
-			this.ns    = str2double(fread(this.fd,4,'*char')');
+			this.ver = str2double(char(fread(this.fd,8)'));
+			this.patientID = fread(this.fd,80,'*char')';
+			this.recordID = fread(this.fd,80,'*char')';
+			startdate = fread(this.fd,8,'*char')'; % (dd.mm.yy)
+			starttime = fread(this.fd,8,'*char')'; % (hh.mm.ss)
+			this.bytes = str2double(fread(this.fd,8,'*char')');
+			reserved = fread(this.fd,44);
+			this.nr = str2double(fread(this.fd,8,'*char')');
+			this.duration = str2double(fread(this.fd,8,'*char')');
+			this.ns = str2double(fread(this.fd,4,'*char')');
+			this.starttime = DateTime( DateTime.struct_from_datevec(datevec([ startdate ', ' starttime],'dd.mm.yy, HH.MM.SS')) );
+
 			for ii = 1:this.ns
 			    this.label{ii} = regexprep(fread(this.fd,16,'*char')','\W','');
 			end
@@ -161,17 +202,11 @@ classdef EDF < FileHandle & Sorted
 		    this.prefilter = this.prefilter(targetSignals);
 		    this.transducer = this.transducer(targetSignals);
 
-		    % digital max is the frequency
-		    % implementing fs (frequency) is necessary to subclass Sorted
-		    this.fs = this.digitalMax;
-
 			% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			% RECORD
+			% data
 			% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		    
-		    record = zeros(numel(this.label), this.samples(1)*this.nr);
-		    % NOTE: 5/6/13 Modified for loop below to change instances of this.samples to
-		    % this.samples(ii). I think this underscored a problem with the reader.
+		    this.data = zeros(numel(this.label), this.samples(1)*this.nr);
 		    
 		    recnum = 1;
 		    for ii = 1:this.ns
@@ -179,7 +214,7 @@ classdef EDF < FileHandle & Sorted
 		            ctr = 1;
 		            for jj = 1:this.nr
 		                try
-		                    record(recnum, ctr : ctr + this.samples(ii) - 1) = tmpdata(jj).data{ii};
+		                    this.data(recnum, ctr : ctr + this.samples(ii) - 1) = tmpdata(jj).data{ii};
 		                end
 		                ctr = ctr + this.samples(ii);
 		            end
@@ -207,19 +242,20 @@ classdef EDF < FileHandle & Sorted
 
 			    % Now loop over all the variables that need scaling
 			    for i=1:num_of_vars_to_scale 
-			        a = find(record(indices(i),:)==0);
+			        a = find(this.data(indices(i),:)==0);
 			        first_zero_loc = a(1);
 			        X = 0:1:first_zero_loc-2;
-			        V = record(1,1:first_zero_loc-1);
+			        V = this.data(1,1:first_zero_loc-1);
 			        Xq = 0:1/scale_factor(indices(i)):first_zero_loc-1;
 			        Xq=Xq(1:end-1);
 			        newlactatevec = interp1(X,V,Xq);
-			        record(indices(i),:) = newlactatevec;
+			        this.data(indices(i),:) = newlactatevec;
 			    clear a X Xq V 
-			    % end
 		    end
 
-		    this.record = record;
-		end
-	end
-end
+		    % implementing fs (frequency) is necessary to subclass Sorted
+		    this.fs = size(this.data,2)/this.duration;
+
+		end %end read__
+	end % end methods
+end % end EdfHandle

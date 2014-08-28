@@ -1,15 +1,11 @@
 
-% txtfile = '~/Desktop/txt/NEF1958 F Tamoxifen Baseline 03_20_2014 0.5-40.txt';
-% txtdoc = txt(txtfile);
-% times = txtdoc.times;
-% txtdoc.sort(txt.MINUTE,1);
+
+edffile = 'D:\MAschmidt\Spont vs SD\NEF1958 F Tamoxifen SD 03_18_2014 with TTL Channel.edf';
 
 
-edffile = '~/Desktop/edf/NEF1958 F Tamoxifen SD 03_18_2014 with TTL Channel.edf';
-edf = EDF(edffile);
+edf = EdfHandle(edffile);
 
+edf.sort(edf.MINUTE,10); % sort by 10min intervals
 
-% sorted_times = 
-
-edf.sort(edf.MINUTE,10);
+x = edf.eeg1(1:6); % retrieve the first 6 10 minutes intervals
 
