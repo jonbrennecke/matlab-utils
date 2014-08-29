@@ -25,8 +25,9 @@ classdef ArrayTimeView < Core
 
 				% loop through the indices and select the given time interval
 				strt = onset+(idx-1)*len;
+
 				[x1,x2]=ndgrid(strt,1:len);
-				varargout = { this.data(x1+x2) };
+				varargout = { this.data(x1+x2), this.parent.starttime + strt };
 			
 			% passthrough to methods and properties
 			elseif ismethod(this,s(1).subs) || isprop(this,s(1).subs)

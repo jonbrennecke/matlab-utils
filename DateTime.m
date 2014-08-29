@@ -2,7 +2,7 @@ classdef DateTime < Core
 
 	properties (SetAccess = private)
 		
-		% DateTime defaultd
+		% DateTime defaults 
 		datetime_struct = struct( ...
 			'months', 0, ...
 			'days', 0, ...
@@ -61,6 +61,36 @@ classdef DateTime < Core
 		% operators
 		% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+		% binary addition
+		function add = plus(a,b)
+			if ~strcmp(class(a),'DateTime')
+				% (DateTime)a + (int)b
+				for i =1:length(b)
+					add(i) = 
+				end
+				a.unix_time = a.unix_time + b;
+				add = a;
+			end
+			if ~strcmp(class(b),'DateTime')
+				% (int)a + (DateTime)b
+				b.unix_time = b.unix_time + a;
+				add = b;
+			end
+		end
+
+		% binary subtraction
+		function add = minux(a,b)
+			if ~strcmp(class(a),'DateTime')
+				% (DateTime)a - (int)b
+				a.unix_time = a.unix_time - b;
+				add = a;
+			end
+			if ~strcmp(class(b),'DateTime')
+				% (int)a - (DateTime)b
+				b.unix_time = b.unix_time - a;
+				add = b;
+			end
+		end
 
 		% less than
 		function bool = lt(a,b)
