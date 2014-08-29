@@ -63,32 +63,29 @@ classdef DateTime < Core
 
 		% binary addition
 		function add = plus(a,b)
-			if ~strcmp(class(a),'DateTime')
-				% (DateTime)a + (int)b
+			if ~strcmp(class(a),'DateTime') % (DateTime)a + (int)b
 				for i =1:length(b)
-					add(i) = 
+					add(i) = DateTime(a.unix_time + b);
 				end
-				a.unix_time = a.unix_time + b;
-				add = a;
 			end
-			if ~strcmp(class(b),'DateTime')
-				% (int)a + (DateTime)b
-				b.unix_time = b.unix_time + a;
-				add = b;
+			if ~strcmp(class(b),'DateTime') % (int)a + (DateTime)b
+				for i =1:length(b)
+					add(i) = DateTime(b.unix_time + a);
+				end
 			end
 		end
 
 		% binary subtraction
 		function add = minux(a,b)
 			if ~strcmp(class(a),'DateTime')
-				% (DateTime)a - (int)b
-				a.unix_time = a.unix_time - b;
-				add = a;
+				for i =1:length(b)
+					add(i) = DateTime(a.unix_time - b);
+				end
 			end
 			if ~strcmp(class(b),'DateTime')
-				% (int)a - (DateTime)b
-				b.unix_time = b.unix_time - a;
-				add = b;
+				for i =1:length(b)
+					add(i) = DateTime(b.unix_time - a);
+				end
 			end
 		end
 
