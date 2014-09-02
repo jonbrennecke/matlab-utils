@@ -77,9 +77,11 @@ classdef EdfHandle < FileHandle & Sortable
 			% otherwise, match with the signal label names (eg, 'eeg1','emg') and 
 			% pass throught to the ArrayTimeView objects
 			else
-				i = find(cellfun(@(x)strcmp(lower(x),s(1).subs),this.label));
-				if length(s)>1
+				i = find(cellfun(@(x)strcmpi(x,s(1).subs),this.label));
+				if length(s)>1 && iscell(s(2).subs)
 					varargout = { subsref(this.signals{i},struct('type','()','subs',s(2).subs{:})) };
+                elseif length(s)>1 && ischar(s(2).subs) % get properties
+                    varargout = {this.signals{i}.(s(2).subs)};
 				else
 					varargout = {this.signals{i}};
 				end
