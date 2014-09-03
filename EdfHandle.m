@@ -6,29 +6,30 @@ classdef EdfHandle < FileHandle & Sortable
 	properties (SetAccess = protected)
 
 		% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		% header properties
+		% this properties
 		% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		% fixed length header constants
-		ver;
-		patientID;
-		recordID;
+		% fixed length this constants
+		version;
+		patient_id;
+		record_id;
 		starttime;
 		bytes;
 		nr;
 		duration;
 		ns;
 
-		% variable length header constants
-		label;
+		% variable length this constants
+		labels;
 		transducer;
 		units;
-		physicalMin;
-		physicalMax;
-		digitalMin;
-		digitalMax;
-		prefilter;
+		phys_min;
+		phys_max;
+		dig_min;
+		dig_max;
+		prefiltering;
 		samples;
+		reserved;
 		fs;
 
 		% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -54,8 +55,8 @@ classdef EdfHandle < FileHandle & Sortable
 			times = this.times();
 
 			% create ArrayTimeView objects for each label
-			for i=1:length(this.label)
-				this.signals{i} = ArrayTimeView(this,this.data(i,:),times(i,:));
+			for i=1:length(this.labels)
+				this.signals{i} = ArrayTimeView(this,this.data{i},times{i},this.fs(i));
 			end
 
 		end
@@ -74,10 +75,10 @@ classdef EdfHandle < FileHandle & Sortable
 					varargout = {this.(s(1).subs)};
 				end
 
-			% otherwise, match with the signal label names (eg, 'eeg1','emg') and 
+			% otherwise, match with the signal labels names (eg, 'eeg1','emg') and 
 			% pass throught to the ArrayTimeView objects
 			else
-				i = find(cellfun(@(x)strcmpi(x,s(1).subs),this.label));
+				i = find(cellfun(@(x)strcmpi(x,s(1).subs),this.labels));
 				if length(s)>1 && iscell(s(2).subs)
 					varargout = { subsref(this.signals{i},struct('type','()','subs',s(2).subs{:})) };
                 elseif length(s)>1 && ischar(s(2).subs) % get properties
@@ -96,10 +97,10 @@ classdef EdfHandle < FileHandle & Sortable
 		% implementation of the abstract function in the parent class Sorted
 		% returns a vector of unix timestamps equal in size to the data vector
 		function times = times(this)
-			times = zeros(size(this.data));
+			times = cell(size(this.data));
 			for i=1:this.ns
-				tick = 1/this.fs; % each sample increments the time by this much
-				times(i,:) = this.starttime.unix + (1:length(times(i,:)))*tick;
+				tick = 1/this.fs(i); % each sample increments the time by this much
+				times{i} = this.starttime.unix + (1:length(this.data{i}))*tick;
 			end
 		end
 
@@ -107,156 +108,74 @@ classdef EdfHandle < FileHandle & Sortable
 	methods(Access=private)
 
 		function read__(this)
+ 
+			% Parse EDF file information based on the EDF/EDF+ specs
+			% @see http://www.edfplus.info/specs/index.html
+		 
+			data = fread(this.fd,256,'*char');
+		 
+			this.version = data(1:8);
+			this.patient_id = data(9:88);
+			this.record_id = data(89:168);
 
-			% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			% borrowed from some code by Brett Shoelson, PhD
-			% brett.shoelson@mathworks.com
-			% Copyright 2009 - 2012 MathWorks, Inc.
-			% 8/27/09
-			% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			% combine the start date and start time into a DateTime object
+			startdate = strtrim(data(169:176));
+			starttime = strtrim(data(177:184));
+			this.starttime = DateTime( DateTime.struct_from_datevec(datevec([ startdate' ', ' starttime'],'dd.mm.yy, HH.MM.SS')) );
+			
+			this.bytes = data(185:192);
+			this.nr = data(237:244);
+			this.duration = str2double(data(245:252));
+			this.ns = str2double(data(253:256));
+		 
+			% advance to the second part of the header,
+			% containing information about each signal
+		 
+			lengths = [ 16, 80, 8, 8, 8, 8, 8, 80, 8, 32 ];
+			values = cell(length(lengths),this.ns);
+		 
+		 	headerkeys = { 
+				'labels', 
+				'transducer',
+				'units',
+				'phys_min',
+				'phys_max',
+				'dig_min',
+				'dig_max',
+				'prefiltering',
+				'samples',
+				'reserved' 
+			};
 
-			% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			% HEADER
-			% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-			this.ver = str2double(char(fread(this.fd,8)'));
-			this.patientID = fread(this.fd,80,'*char')';
-			this.recordID = fread(this.fd,80,'*char')';
-			startdate = fread(this.fd,8,'*char')'; % (dd.mm.yy)
-			starttime = fread(this.fd,8,'*char')'; % (hh.mm.ss)
-			this.bytes = str2double(fread(this.fd,8,'*char')');
-			reserved = fread(this.fd,44);
-			this.nr = str2double(fread(this.fd,8,'*char')');
-			this.duration = str2double(fread(this.fd,8,'*char')');
-			this.ns = str2double(fread(this.fd,4,'*char')');
-			this.starttime = DateTime( DateTime.struct_from_datevec(datevec([ startdate ', ' starttime],'dd.mm.yy, HH.MM.SS')) );
-
-			for ii = 1:this.ns
-			    this.label{ii} = regexprep(fread(this.fd,16,'*char')','\W','');
+			for i=1:length(lengths)
+				for j=1:this.ns
+					values{i,j} = fread(this.fd,lengths(i),'*char')';
+				end
+				this.(headerkeys{i}) = values(i,:);
 			end
 
-		    targetSignals = 1:numel(this.label);
-			if iscell(targetSignals)||ischar(targetSignals)
-			    targetSignals = find(ismember(this.label,regexprep(targetSignals,'\W','')));
-			end
-			if isempty(targetSignals)
-			    error('EDFREAD: The signal(s) you requested were not detected.')
-			end
+			% TODO there may a better way to do this
+			this.phys_max = str2num(cell2mat(this.phys_max'));
+			this.phys_min = str2num(cell2mat(this.phys_min'));
+			this.dig_max = str2num(cell2mat(this.dig_max'));
+			this.dig_min = str2num(cell2mat(this.dig_min'));
+			this.samples = str2num(cell2mat(this.samples'));
+			this.labels = strtrim(this.labels);
+			this.units = strtrim(this.units);
+		 
+			% the data record begins at 256 + ( ns * 256 ) bytes and is stored as n records of 2 * samples bytes
+			% values are stored as 2 byte ascii in 2's complement
+			this.data = cell(this.ns,1);
 
-			for ii = 1:this.ns
-			    this.transducer{ii} = fread(this.fd,80,'*char')';
+			scalefac = (this.phys_max - this.phys_min)./(this.dig_max - this.dig_min);
+		    dc = this.phys_max - scalefac .* this.dig_max;
+		 
+			for i=1:this.ns
+				this.data{i} = fread(this.fd, this.samples(i),'int16') * scalefac(i) + dc(i);
 			end
-			% Physical dimension
-			for ii = 1:this.ns
-			    this.units{ii} = fread(this.fd,8,'*char')';
-			end
-			% Physical minimum
-			for ii = 1:this.ns
-			    this.physicalMin(ii) = str2double(fread(this.fd,8,'*char')');
-			end
-			% Physical maximum
-			for ii = 1:this.ns
-			    this.physicalMax(ii) = str2double(fread(this.fd,8,'*char')');
-			end
-			% Digital minimum
-			for ii = 1:this.ns
-			    this.digitalMin(ii) = str2double(fread(this.fd,8,'*char')');
-			end
-			% Digital maximum
-			for ii = 1:this.ns
-			    this.digitalMax(ii) = str2double(fread(this.fd,8,'*char')');
-			end
-			for ii = 1:this.ns
-			    this.prefilter{ii} = fread(this.fd,80,'*char')';
-			end
-			for ii = 1:this.ns
-			    this.samples(ii) = str2double(fread(this.fd,8,'*char')');
-			end
-			for ii = 1:this.ns
-			    reserved    = fread(this.fd,32,'*char')';
-			end
-			this.label = this.label(targetSignals);
-			this.label = regexprep(this.label,'\W','');
-			this.units = regexprep(this.units,'\W','');
-
-		    % Scale data (linear scaling)
-		    scalefac = (this.physicalMax - this.physicalMin)./(this.digitalMax - this.digitalMin);
-		    dc = this.physicalMax - scalefac .* this.digitalMax;
-		    
-		    tmpdata = struct;
-		    for recnum = 1:this.nr
-		        for ii = 1:this.ns
-		            % Read or skip the appropriate number of data points
-		            if ismember(ii,targetSignals)
-		                % Use a cell array for DATA because number of samples may vary
-		                % from sample to sample
-		                tmpdata(recnum).data{ii} = fread(this.fd,this.samples(ii),'int16') * scalefac(ii) + dc(ii);
-		            else
-		                fseek(this.fd,this.samples(ii)*2,0);
-		            end
-		        end
-		    end
-		    this.units = this.units(targetSignals);
-		    this.physicalMin = this.physicalMin(targetSignals);
-		    this.physicalMax = this.physicalMax(targetSignals);
-		    this.digitalMin = this.digitalMin(targetSignals);
-		    this.digitalMax = this.digitalMax(targetSignals);
-		    this.prefilter = this.prefilter(targetSignals);
-		    this.transducer = this.transducer(targetSignals);
-
-			% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			% data
-			% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		    
-		    this.data = zeros(numel(this.label), this.samples(1)*this.nr);
-		    
-		    recnum = 1;
-		    for ii = 1:this.ns
-		        if ismember(ii,targetSignals)
-		            ctr = 1;
-		            for jj = 1:this.nr
-		                try
-		                    this.data(recnum, ctr : ctr + this.samples(ii) - 1) = tmpdata(jj).data{ii};
-		                end
-		                ctr = ctr + this.samples(ii);
-		            end
-		            recnum = recnum + 1;
-		        end
-		    end
-		    this.ns = numel(this.label);
-		    this.samples = this.samples(targetSignals);
-
-			% Since different signals may have been read at different frequencies, I need 
-			% to interpolate those that are sampled at a lower frequency than the highest frequency
-
-			% Find the largest values in this.samples (this is the number of samples per 'duration' seconds)
-			max_samples_per_epoch = max(this.samples(1:4));   %I'm leaving off EDFAnnotations because I don't care about interpolating them
-			scale_factor = ones(1,4);
-
-			    for i=1:4
-			        if this.samples(i) ~= max_samples_per_epoch
-			            scale_factor(i) = max_samples_per_epoch/this.samples(i);
-			        end 
-			    end 
-
-			    num_of_vars_to_scale = sum(scale_factor~=1);
-			    indices = find(scale_factor~=1);
-
-			    % Now loop over all the variables that need scaling
-			    for i=1:num_of_vars_to_scale 
-			        a = find(this.data(indices(i),:)==0);
-			        first_zero_loc = a(1);
-			        X = 0:1:first_zero_loc-2;
-			        V = this.data(1,1:first_zero_loc-1);
-			        Xq = 0:1/scale_factor(indices(i)):first_zero_loc-1;
-			        Xq=Xq(1:end-1);
-			        newlactatevec = interp1(X,V,Xq);
-			        this.data(indices(i),:) = newlactatevec;
-			    clear a X Xq V 
-		    end
 
 		    % implementing fs (frequency) is necessary to subclass Sorted
-		    this.fs = size(this.data,2)/this.duration;
+		    this.fs = this.samples/this.duration;
 
 		end %end read__
 	end % end methods

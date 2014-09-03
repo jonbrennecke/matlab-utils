@@ -4,21 +4,23 @@ classdef ArrayTimeView < Core
 		parent;
 		data;
 		times;
+		fs;
 	end
 
 	methods
 
-		function this=ArrayTimeView(parent,data,times)
+		function this=ArrayTimeView(parent,data,times,fs)
 			this.parent = parent;
 			this.data = data;
 			this.times = times;
+			this.fs = fs;
 		end
 
 		function varargout = subsref(this,s)
 			if strcmp(s(1).type,'()') % called
 
 				idx = s(1).subs;
-				len = this.parent.fs*this.parent.sort_key__; % number of samples in an interval
+				len = this.fs*this.parent.sort_key__; % number of samples in an interval
 
 				% find the first interval break and save it as the onset
 				onset = find(mod(this.times(1:len),this.parent.sort_key__)==0);
