@@ -19,7 +19,7 @@ classdef ArrayTimeView < Core
 		function varargout = subsref(this,s)
 			if strcmp(s(1).type,'()') % called
 
-				idx = s(1).subs;
+				idx = s(1).subs{:};
 				len = this.fs*this.parent.sort_key__; % number of samples in an interval
 
 				% find the first interval break and save it as the onset
@@ -27,9 +27,14 @@ classdef ArrayTimeView < Core
 
 				% loop through the indices and select the given time interval
 				strt = onset+(idx-1)*len;
+                
+                starttimes = this.times(strt);
+                for i=1:length(starttimes)
+                    datetimes{i} = DateTime(starttimes(i));
+                end
 
 				[x1,x2]=ndgrid(strt,1:len);
-				varargout = { this.data(x1+x2), this.parent.starttime + strt };
+				varargout = { this.data(x1+x2), datetimes };
 			
 			% passthrough to methods and properties
 			elseif ismethod(this,s(1).subs) || isprop(this,s(1).subs)

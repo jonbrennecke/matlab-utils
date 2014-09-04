@@ -48,7 +48,9 @@ classdef DateTime < Core
 
 		% convert a time into a string
 		function str = str( this, fmt )
-			str = datestr(this.datenum(), fmt);
+            for i=1:length(this)
+                str{i} = datestr(this(i).datenum(), fmt);
+            end
 		end
 
 		% matlab datenum representation
@@ -65,12 +67,12 @@ classdef DateTime < Core
 		function add = plus(a,b)
 			if strcmp(class(a),'DateTime') % (DateTime)a + (int)b
 				for i =1:length(b)
-					add(i) = DateTime(a.unix_time + b);
+					add(i) = DateTime(a.unix_time + b(i));
 				end
 			end
 			if strcmp(class(b),'DateTime') % (int)a + (DateTime)b
 				for i =1:length(a)
-					add(i) = DateTime(b.unix_time + a);
+					add(i) = DateTime(b.unix_time + a(i));
 				end
 			end
 		end

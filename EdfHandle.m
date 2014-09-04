@@ -70,7 +70,7 @@ classdef EdfHandle < FileHandle & Sortable
 			% passthrough to methods and properties
 			if ismethod(this,s(1).subs) || isprop(this,s(1).subs)
 				if length(s)>1
-					varargout = {this.(s(1).subs)(s(2).subs{:})};
+					varargout = { builtin('subsref',this,s) };
 				else
 					varargout = {this.(s(1).subs)};
 				end
@@ -80,7 +80,7 @@ classdef EdfHandle < FileHandle & Sortable
 			else
 				i = find(cellfun(@(x)strcmpi(x,s(1).subs),this.labels));
 				if length(s)>1 && iscell(s(2).subs)
-					varargout = { subsref(this.signals{i},struct('type','()','subs',s(2).subs{:})) };
+                    [varargout{1:nargout}] = builtin('subsref',this.signals{i},s(2:end));
                 elseif length(s)>1 && ischar(s(2).subs) % get properties
                     varargout = {this.signals{i}.(s(2).subs)};
 				else
