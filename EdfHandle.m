@@ -61,7 +61,7 @@ classdef EdfHandle < FileHandle & Sortable
 
 		end
 
-		% overload the subsref operator to allow calling
+		% overload the subsref operator to allow calling 'virtual methods'
 		function varargout = subsref(this,s)
 			if s(1).type ~= '.' 
 				error('EdfHandle is not callable.');
