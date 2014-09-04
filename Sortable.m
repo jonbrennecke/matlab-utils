@@ -15,6 +15,7 @@ classdef Sortable < Core
 	properties (SetAccess = public)
 		
 		% enum
+		MILLI = 0.001;
 		SECOND = 1;
 		MINUTE = 60;
 		HOUR = 60*60;

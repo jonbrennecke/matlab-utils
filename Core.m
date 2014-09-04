@@ -42,22 +42,22 @@ classdef(Abstract) Core < handle
 		% --
 		% subsref is overloaded with the ability to call virtual functions
 		% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		function varargout = subsref(this,s)
+		% function varargout = subsref(this,s)
 			
-			i = find(strcmpi(this.virtual_functions__.name,s(1).subs));
-			if s(1).type == '.' && i
+		% 	i = find(strcmpi(this.virtual_functions__.name,s(1).subs));
+		% 	if s(1).type == '.' && i
 
-				% otherwise, match with the name of a virtual function and 
-				% pass through to it's callback function
-				if length(s)>1 && iscell(s(2).subs)
-					[varargout{1:nargout}] = builtin('subsref',this.virtual_functions__(i).callback,s(2:end));
-				end
+		% 		% otherwise, match with the name of a virtual function and 
+		% 		% pass through to it's callback function
+		% 		if length(s)>1 && iscell(s(2).subs)
+		% 			[varargout{1:nargout}] = builtin('subsref',this.virtual_functions__(i).callback,s(2:end));
+		% 		end
 
-			else % passthrough
-				[varargout{1:nargout}] = builtin('subsref',this,s);
-			end
+		% 	else % passthrough
+		% 		[varargout{1:nargout}] = builtin('subsref',this,s);
+		% 	end
 
-		end % end subsref
+		% end % end subsref
 
 		% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		% overloaded 'set' method
