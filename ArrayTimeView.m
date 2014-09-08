@@ -26,7 +26,7 @@ classdef ArrayTimeView < Core
 				onset = find(mod(this.times(1:len),this.parent.sort_key__)==0);
 
 				% loop through the indices and select the given time interval
-				strt = onset+(idx-1)*len;
+				strt = onset+(idx)*len;
                 
                 starttimes = this.times(strt);
                 for i=1:length(starttimes)
