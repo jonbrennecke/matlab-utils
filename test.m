@@ -5,38 +5,46 @@ const = struct( ...
 
 
 % open an EDF file
-edffile = 'D:\MAschmidt\ICV Bilateral Injections\NEF2244 Day1 08_11_2014 with TTL Channel.edf';
+edffile = 'D:\MAschmidt\ICV Bilateral Injections\NEF2230 Day2 08_15_2014 with TTL Channel.edf';
+% edffile = 'D:\MAschmidt\ICV Bilateral Injections\NEF2230 Day2 08_15_2014 with TTL Channel.edf'; % good file possibly
 % edffile = 'D:\MAschmidt\Spont vs SD\NEF1958 F Tamoxifen SD 03_18_2014 with TTL Channel.edf';
 edf = EdfHandle(edffile);
 
 % sort by 10min intervals
 edf.sort(edf.MINUTE,10);
 
-% retrieve the first n 10 minutes intervals
-eeg1 = edf.eeg1(1:10);
-[ttl,ttl_times] = edf.ttl(1:10); % TODO add support for 'end'
+for n=7:12
+
+% n = 1;
+
+	% retrieve the first n 10 minutes intervals
+	eeg1 = edf.eeg2(n);
+	[ttl,ttl_times] = edf.ttl(n); % TODO add support for 'end'
 
 
-% find each TTL onset
-idx = find(diff(ttl)==1);
+	% find each TTL onset
+	idx = find(diff(ttl)==1);
 
-% milliseconds before and after
-ms_before = 500;
-ms_after = 500;
+	% milliseconds before and after
+	ms_before = 500;
+	ms_after = 500;
 
-% samples before and after
-samples_before = (ms_before*edf.MILLI*edf.ttl.fs);
-samples_after = (ms_after*edf.MILLI*edf.ttl.fs);
+	% samples before and after
+	samples_before = (ms_before*edf.MILLI*edf.ttl.fs);
+	samples_after = (ms_after*edf.MILLI*edf.ttl.fs);
 
-% for each data point, find the surrounding area of [ms_before,ms_after] milliseconds
-[x1,x2] = ndgrid(( idx(idx>200 & idx<(idx(end)-200)) - samples_before),1:(samples_before+samples_after));
-eeg1_tmp = eeg1';
-eeg1_traces = eeg1_tmp(x1+x2);
-% ttl_traces = ttl(x1+x2);
+	% for each data point, find the surrounding area of [ms_before,ms_after] milliseconds
+	[x1,x2] = ndgrid(( idx(idx>200 & idx<(idx(end)-200)) - samples_before),1:(samples_before+samples_after));
+	eeg1_tmp = eeg1';
+	eeg1_traces = eeg1_tmp(x1+x2);
+	% ttl_traces = ttl(x1+x2);
 
-% find the average of each [ms_before,ms_after] area
-averages = mean(eeg1_traces);
-% plot(averages);figure(gcf);
+	% find the average of each [ms_before,ms_after] area
+	averages = mean(eeg1_traces);
+	figure;
+	plot(averages);figure(gcf);
+
+end
 
 
 % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
